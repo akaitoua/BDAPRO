@@ -17,7 +17,7 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
    * a path of `/`.
    */
   def index = Action {
-    Ok(views.html.index("Integration between 2 big data sets"))
+    Ok(views.html.index())
   }
 
 }
