@@ -35,5 +35,6 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
     }
   }
 
+  def delete(id: String) = Action {Ok(views.html.todo())}
 
 }

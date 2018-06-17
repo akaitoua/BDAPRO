@@ -18,5 +18,6 @@ class IntegrationController  @Inject()(cc: ControllerComponents) extends Abstrac
 
   def upload = Action {Ok(views.html.todo())}
 
+  def delete(id: String) = Action {Ok(views.html.todo())}
 
 }

@@ -11,12 +11,14 @@ GET     /api/datasets                   controllers.DatasetController.index
 GET     /api/dataset/:id                controllers.DatasetController.read(id: String)
 POST    /api/dataset                    controllers.DatasetController.upload
 PUT     /api/dataset/:id                controllers.DatasetController.update(id: String)
+DELETE  /api/dataset/:id                    controllers.DatasetController.delete(id: String)
 
 #Integrations
 GET     /api/integrations               controllers.IntegrationController.index
 GET     /api/integration/:id            controllers.IntegrationController.read(id: String)
 POST    /api/integration                controllers.IntegrationController.upload
 PUT     /api/integration                controllers.IntegrationController.update(id: String)
+DELETE  /api/integration/:id               controllers.IntegrationController.delete(id: String)
 
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count
