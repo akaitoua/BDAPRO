@@ -11,7 +11,7 @@ GET     /api/datasets                   controllers.DatasetController.index
 GET     /api/dataset/:id                controllers.DatasetController.read(id: String)
 POST    /api/dataset                    controllers.DatasetController.upload
 PUT     /api/dataset/:id                controllers.DatasetController.update(id: String)
-DELETE  /api/dataset/:id                    controllers.DatasetController.delete(id: String)
+DELETE  /api/dataset/:id                 controllers.DatasetController.delete(id: String)
 
 #Integrations
 GET     /api/integrations               controllers.IntegrationController.index
