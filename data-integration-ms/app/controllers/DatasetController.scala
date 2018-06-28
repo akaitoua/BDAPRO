@@ -10,9 +10,14 @@ import play.api.data.Form
 import play.api.libs.json.Json
 import play.api.libs.json.JsonNaming.Identity
 import play.api.mvc._
-
 import services.Counter
 import play.api.libs.json._
+import scala.concurrent._
+import scala.concurrent.duration._
+
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{Await, Future, Promise}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractController(cc){
@@ -33,6 +38,7 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
     )
   }
 
+
   def getListOfFiles(dir: File, extensions: List[String]): List[File] = {
     dir.listFiles.filter(_.isFile).toList.filter { file =>
       extensions.exists(file.getName.endsWith(_))
@@ -43,19 +49,35 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
 
     val appPath = Play.application().path()
     val okFileExtensions = List("csv")
-    val files = getListOfFiles(new File(s"/$appPath/datasets/"), okFileExtensions)
+    val dir = new File(s"/$appPath/datasets/")
+
+    val x = Future {
+      dir.listFiles.filter(_.isFile).toList
+    }
 
     var dsSeq = Seq[Dataset]()
 
-    for (file <- files){
-      val fileName = file.getName
-      val datasetArgs = fileName.split("-")
+    val r = x map { list =>
 
-      val id = datasetArgs.apply(0)
-      val name = datasetArgs.apply(1)
-      dsSeq = dsSeq :+ Dataset(id.toInt, name)
+      for (file <- list){
+        val fileName = file.getName
+        val datasetArgs = fileName.split("-")
+
+        val id = datasetArgs.apply(0)
+        val name = datasetArgs.apply(1)
+        dsSeq = dsSeq :+ Dataset(id.toInt, name)
+
+        Logger.info(list.toString())
+
+        val values = Summary(dsSeq)
+        val json = Json.toJson(values)
+
+        Ok(Json.prettyPrint(json))
+
+      }
     }
-    //Logger.info(files.toString())
+
+    Await.ready(r, 1000000 nanos)
 
     val values = Summary(dsSeq)
     val json = Json.toJson(values)
