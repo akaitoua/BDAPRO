@@ -22,6 +22,11 @@ country  |	code of the country where the company is located
 * Create an evaluator to evaluate your previous work.
 * Analyse the performance of your implementation. The analysis should be for both the matching strategies performance and accuracy and the web service performance in providing fast response for a big number of users.
 
+## Additonal Documents:
+
+* Scala and Play Framework features: https://docs.google.com/presentation/d/1Dhj72Vrp7_-HL9taLZpA3UNAxryW5cgdIHGkF-rNu10/edit?usp=sharing
+* Dabases Comparison: https://docs.google.com/document/d/1QpvsyGh_-HDVRLuwref6imqEApn0pZ8_UcRjxZcLCRs/edit?usp=sharing
+
 ## Team Members
 
 @[paguos](https://github.com/paguos/)
