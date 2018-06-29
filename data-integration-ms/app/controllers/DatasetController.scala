@@ -3,6 +3,7 @@ package controllers
 import java.io.File
 import java.nio.file.Paths
 
+import akka.http.scaladsl.model.HttpHeader.ParsingResult
 import javax.inject._
 import play.Play
 import play.api.Logger
@@ -12,9 +13,9 @@ import play.api.libs.json.JsonNaming.Identity
 import play.api.mvc._
 import services.Counter
 import play.api.libs.json._
+
 import scala.concurrent._
 import scala.concurrent.duration._
-
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future, Promise}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -42,6 +43,18 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
   def getListOfFiles(dir: File, extensions: List[String]): List[File] = {
     dir.listFiles.filter(_.isFile).toList.filter { file =>
       extensions.exists(file.getName.endsWith(_))
+    }
+  }
+
+  def getListFile(dir: File, id: Int): List[File] = {
+    dir.listFiles.filter(_.isFile).toList.filter { file =>
+      val fileName =file.getName()
+      val args = fileName.split("-")
+      val dsId = args.apply(0)
+
+      Logger.info("Infox: " + dsId)
+
+      id == dsId.toInt
     }
   }
 
@@ -85,7 +98,30 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
     Ok(Json.prettyPrint(json))
   }
 
-  def read(id: String) = Action {Ok(views.html.todo())}
+  def read(id: String) = Action {
+
+    val appPath = Play.application().path()
+    val dir = new File(s"/$appPath/datasets/")
+
+    val files = getListFile(dir, id.toInt)
+    var dsSeq = Seq[Dataset]()
+
+
+    for(file <- files) {
+
+      val fileName = file.getName
+      val datasetArgs = fileName.split("-")
+
+      val id = datasetArgs.apply(0)
+      val name = datasetArgs.apply(1)
+      dsSeq = dsSeq :+ Dataset(id.toInt, name)
+
+    }
+
+    if (dsSeq.length < 1) NotFound(views.html.todo())
+    else Ok(Json.prettyPrint(Json.toJson(dsSeq.head)))
+
+  }
 
   def update(id: String) = Action {Ok(views.html.todo())}
 
