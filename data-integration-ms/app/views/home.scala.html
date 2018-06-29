@@ -1,0 +1,21 @@
+@()
+<main role="main" class="container">
+    <form method="post" action="@routes.DatasetController.upload" enctype="multipart/form-data">
+        <div action="" class="form-group">
+            <label for="dsOneName">Dataset name:</label>
+            <input type="text" name="datasetName" class="form-control" id="dsOneName" placeholder="Enter a name..." required>
+        </div>
+
+        <div class="form-group">
+            <input type="file" name="dataset" class="form-control-file" id="dsOneFile" aria-describedby="fileHelp" accept=".csv" required>
+            <small id="fileHelp" class="form-text text-muted">Only .csv files are allowed</small>
+        </div>
+
+        <button type="reset" class="btn btn-secondary">Reset</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
+
+    </form>
+
+</main>
+
+
