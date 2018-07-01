@@ -24,4 +24,12 @@ h1 {
     width: 50px;
 }
 
+#dataset-list button{
+    margin: 5px;
+}
+
+#dataset-container {
+    margin-top: 20px;
+}
+
 

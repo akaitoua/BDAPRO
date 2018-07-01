@@ -1,5 +1,6 @@
-@()
+@(datasets: List[Dataset])
 <main role="main" class="container">
+    <div class="container-fluid">
     <form method="post" action="@routes.DatasetController.upload" enctype="multipart/form-data">
         <div action="" class="form-group">
             <label for="dsOneName">Dataset name:</label>
@@ -15,6 +16,39 @@
         <button type="submit" class="btn btn-primary">Submit</button>
 
     </form>
+    </div>
+
+
+    <div class="container-fluid" id="dataset-container">
+        @if(!datasets.isEmpty) {
+            <h3>Datasets</h3>
+        }
+
+
+
+        <div class="list-group" id="dataset-list">
+            @for(dataset <- datasets){
+                <div class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="d-flex justify-content-between">
+                        <div class="w-50">
+                            <h5 class="mb-1 w-50">@dataset.name</h5>
+                            <small class="text-muted">id: @dataset.id</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-info">Update</button>
+                            <a href="@routes.DatasetController.read(dataset.id)">
+                                <button class="btn btn-info">Download</button>
+                            </a>
+                            <a href="@routes.DatasetController.delete(dataset.id)">
+                                <button class="btn btn-danger">Delete</button>
+                            </a>
+
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
 
 </main>
 

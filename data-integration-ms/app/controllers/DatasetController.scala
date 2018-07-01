@@ -11,14 +11,13 @@ import play.api.libs.json._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import models.Dataset
 
 
 @Singleton
 class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractController(cc){
 
   /* Classes and implicit values to generate the Dataset json: */
-
-  case class Dataset(id: Int, name: String)
   case class DatasetCollection(datasets: Seq[Dataset])
 
   implicit val datasetWrites = new Writes[Dataset] {
@@ -51,7 +50,8 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       val fileName =file.getName()
       val args = fileName.split("-")
       val dsId = args.apply(0)
-      id == dsId.toInt
+      if (args.length == 1) false
+      else id == dsId.toInt
     }
   }
 
@@ -74,7 +74,8 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       val datasetArgs = fileName.split("-")
       val id = datasetArgs.apply(0)
       val name = datasetArgs.apply(1)
-      dsSeq = dsSeq :+ Dataset(id.toInt, name)
+
+      dsSeq = dsSeq :+ Dataset(id, name)
     }
 
     val values = DatasetCollection(dsSeq)
@@ -132,7 +133,7 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       dataset.ref.moveTo(Paths.get(s"/$currentDirectory/datasets/$id-$name.csv"), replace = true)
       Logger.info(s"File $id-$name.csv added!")
 
-      Ok(views.html.index())
+      Redirect(routes.HomeController.index)
     }.getOrElse {
       Logger.error(s"File not found im form")
       Redirect(routes.HomeController.index).flashing(
@@ -166,7 +167,7 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       if (file.delete()) deleted = true
     }
 
-    if (deleted) Ok(views.html.todo())
+    if (deleted) Redirect(routes.HomeController.index)
     else NotFound(views.html.todo())
   }
 
