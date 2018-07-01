@@ -10,8 +10,8 @@ libraryDependencies ++= Seq(
   "com.databricks" % "spark-csv_2.11" % "1.5.0",
   "org.apache.commons" % "commons-text" % "1.4"
 )
-
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
+//
+//assemblyMergeStrategy in assembly := {
+//  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+//  case x => MergeStrategy.first
+//}
