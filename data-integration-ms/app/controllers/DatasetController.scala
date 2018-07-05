@@ -2,6 +2,7 @@ package controllers
 
 import java.io.File
 import java.nio.file.Paths
+import scala.io.Source
 
 import javax.inject._
 import play.api.Logger
@@ -12,6 +13,8 @@ import play.api.libs.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import models.Dataset
+
+import scala.util.Try
 
 
 @Singleton
@@ -73,7 +76,7 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
 
       val datasetArgs = fileName.split("-")
       val id = datasetArgs.apply(0)
-      val name = datasetArgs.apply(1)
+      val name = datasetArgs.apply(1).replace(".csv", "")
 
       dsSeq = dsSeq :+ Dataset(id, name)
     }
@@ -97,13 +100,43 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
 
     val files = getListFile(dir, id.toInt)
     Logger.info(s"Founded files for id=$id\n -> $files")
-
     if (files.length < 1) NotFound(views.html.todo())
     else Ok.sendFile(new java.io.File(dir + "/" + files.head.getName))
 
   }
 
-  def update(id: String) = Action {Ok(views.html.todo())}
+  def update(id: String) = Action(parse.multipartFormData) { request =>
+
+    Logger.info("Calling update action ...")
+
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    var name = ""
+
+    request.body.asFormUrlEncoded("datasetName").map( { datasetName =>
+      name = datasetName.toString.trim
+    })
+
+    val filePath = s"$currentDirectory/datasets/$id-$name.csv"
+
+    request.body.file("dataset").map { dataset =>
+
+      deleteFile(id)
+
+      val fileName = dataset.filename
+      Logger.info(s"Uploading file: $fileName")
+
+      dataset.ref.moveTo(Paths.get(filePath), replace = true)
+      Logger.info(s"File $id-$name.csv added!")
+
+      Redirect(routes.HomeController.index)
+    }.getOrElse {
+      Logger.info(s"File not found im form")
+      val oldFile = getListFile(new File(s"/$currentDirectory/datasets/"), id.toInt).head.getAbsolutePath
+      mv(oldFile, filePath)
+      Redirect(routes.HomeController.index)
+      //Ok(views.html.todo())
+    }
+  }
 
   /*
   Uploads a new dataset file
@@ -154,6 +187,50 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
     }*/
 
     Logger.info(s"Calling delete action (id:$id) ...")
+    var fileDeleted = deleteFile(id)
+
+    if (fileDeleted) Redirect(routes.HomeController.index)
+    else NotFound(views.html.todo())
+  }
+
+  def show(id: String) = Action {
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    val dir = new File(s"/$currentDirectory/datasets/")
+
+    val files = getListFile(dir, id.toInt)
+    val file = files.head
+    val bufferedSource = Source.fromFile(file.getAbsolutePath)
+    var rows = Array[Array[String]]()
+
+    for(line <- bufferedSource.getLines()){
+      rows = rows :+ line.split("\t")
+    }
+
+    val headers = rows.apply(0)
+    val dataRows = rows.drop(1)
+    val pages = (1 to (rows.length / 10)).toArray
+    Ok(views.html.dataset(headers, dataRows, 1, pages))
+  }
+
+  def show_page(id: String, pagNumb: Int) = Action {
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    val dir = new File(s"/$currentDirectory/datasets/")
+
+    val files = getListFile(dir, id.toInt)
+    val file = files.head
+    val bufferedSource = Source.fromFile(file.getAbsolutePath)
+    var rows = Array[Array[String]]()
+
+    for(line <- bufferedSource.getLines()){
+      rows = rows :+ line.split("\t")
+    }
+    val x = pagNumb - 1
+    val headers = rows.apply(0)
+    val dataRows = rows.drop(1).slice(x * 10,(x+1) * 10)
+    val pages = (1 to (rows.length / 10)).toArray
+    Ok(views.html.dataset(headers, dataRows,pagNumb, pages))
+  }
+  def deleteFile(id: String): Boolean = {
 
     val currentDirectory = new java.io.File(".").getCanonicalPath
     val dir = new File(s"/$currentDirectory/datasets/")
@@ -166,9 +243,10 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       Logger.info(s"Found file with id=$id\n -> $fileName")
       if (file.delete()) deleted = true
     }
-
-    if (deleted) Redirect(routes.HomeController.index)
-    else NotFound(views.html.todo())
+    deleted
   }
+
+  def mv(oldName: String, newName: String) =
+    Try(new File(oldName).renameTo(new File(newName))).getOrElse(false)
 
 }

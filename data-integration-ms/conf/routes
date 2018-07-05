@@ -10,8 +10,10 @@ GET     /                           controllers.HomeController.index
 GET     /api/datasets                   controllers.DatasetController.index
 GET     /api/dataset/:id                controllers.DatasetController.read(id: String)
 POST    /api/dataset                    controllers.DatasetController.upload
-PUT     /api/dataset/:id                controllers.DatasetController.update(id: String)
+POST    /api/dataset/update:id          controllers.DatasetController.update(id: String)
 GET     /api/dataset/delete/:id         controllers.DatasetController.delete(id: String)
+GET     /api/dataset/show/:id           controllers.DatasetController.show(id: String)
+GET     /api/dataset/show/:id/page/:numb   controllers.DatasetController.show_page(id: String, numb: Int)
 
 #Integrations
 GET     /api/integrations               controllers.IntegrationController.index

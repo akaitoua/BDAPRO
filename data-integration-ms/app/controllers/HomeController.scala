@@ -32,7 +32,7 @@ class HomeController @Inject()(cc: ControllerComponents, dsc: DatasetController)
       val fileName = file.getName
       val datasetArgs = fileName.split("-")
       val id = datasetArgs.apply(0)
-      val name = datasetArgs.apply(1)
+      val name = datasetArgs.apply(1).replace(".csv", "")
       Dataset(id, name)
     }
 
