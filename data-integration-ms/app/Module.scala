@@ -1,7 +1,11 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
+import play.api.db.Databases
 import services.{ApplicationTimer, AtomicCounter, Counter}
+import controllers.DatasetController
+import org.h2.jdbc.JdbcSQLException
+import play.api.Logger
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -23,6 +27,20 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
+    initDB()
+  }
+
+  def initDB() = {
+    val conn = Databases.inMemory().getConnection()
+    val stmt = conn.createStatement
+
+    try{
+      stmt.execute("CREATE TABLE DATASET (ID INT PRIMARY KEY , NAME VARCHAR(100) UNIQUE )")
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    }finally {
+      conn.close()
+    }
   }
 
 }

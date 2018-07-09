@@ -15,4 +15,6 @@ libraryDependencies ++= Seq( jdbc , ehcache , ws , specs2 % Test , guice )
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
 
 libraryDependencies += "org.webjars" % "bootstrap" % "3.3.4"
+libraryDependencies += "com.h2database" % "h2" % "1.4.192"
+libraryDependencies += jdbc
       

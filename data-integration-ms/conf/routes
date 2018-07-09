@@ -22,6 +22,8 @@ POST    /api/integration                controllers.IntegrationController.upload
 PUT     /api/integration                controllers.IntegrationController.update(id: String)
 DELETE  /api/integration/:id            controllers.IntegrationController.delete(id: String)
 
+GET     /demo                           controllers.H2Controller.index
+
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count
 
