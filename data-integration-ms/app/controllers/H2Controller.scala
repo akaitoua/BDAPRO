@@ -33,6 +33,7 @@ class H2Controller {
     val files = getListOfFiles(new File(s"/$currentDirectory/datasets/"), okFileExtensions)
 
     for(file <-files){
+      print(file)
       uploadToDB(file)
     }
 
@@ -228,5 +229,21 @@ class H2Controller {
     }
   }
 
+  def renameTable(id: String, newName: String) = {
+
+    val conn = Databases.inMemory().getConnection()
+    val stmt = conn.createStatement
+    val dsId = "%03d".format(id.toInt)
+    try{
+      val oldName = getDatasetName(dsId)
+      stmt.execute(s"ALTER TABLE $oldName RENAME TO $newName;")
+      stmt.execute(s"UPDATE DATASET SET NAME = '$newName' WHERE ID = $dsId")
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    } finally {
+      conn.close()
+      stmt.close()
+    }
+  }
 
 }

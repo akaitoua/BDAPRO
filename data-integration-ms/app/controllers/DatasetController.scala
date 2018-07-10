@@ -121,22 +121,32 @@ class DatasetController  @Inject()(cc: ControllerComponents, h2: H2Controller) e
 
     request.body.file("dataset").map { dataset =>
 
-      deleteFile(id)
 
       val fileName = dataset.filename
-      Logger.info(s"Uploading file: $fileName")
 
-      dataset.ref.moveTo(Paths.get(filePath), replace = true)
-      Logger.info(s"File $id-$name.csv added!")
+      if(fileName == "") {
+        Logger.info(s"File not found im form")
+        val oldFile = getListFile(new File(s"/$currentDirectory/datasets/"), id.toInt).head.getAbsolutePath
+        mv(oldFile, filePath)
+        h2.renameTable(id, name)
 
-      Redirect(routes.HomeController.index)
-    }.getOrElse {
-      Logger.info(s"File not found im form")
-      val oldFile = getListFile(new File(s"/$currentDirectory/datasets/"), id.toInt).head.getAbsolutePath
-      mv(oldFile, filePath)
-      Redirect(routes.HomeController.index)
-      //Ok(views.html.todo())
+      } else {
+        Logger.info(s"Uploading file: $fileName")
+        deleteFile(id)
+        dataset.ref.moveTo(Paths.get(filePath), replace = true)
+        Logger.info(s"File $id-$name.csv added!")
+
+        val oldName = h2.getDatasetName(id)
+        h2.dropTable(oldName)
+
+        Logger.info("Uploading dataset to H2 ...")
+        h2.uploadToDB(new File(s"/$currentDirectory/datasets/$id-$name.csv"))
+        Logger.info("Dataset uploaded to H2")
+      }
+
     }
+
+    Redirect(routes.HomeController.index)
   }
 
   /*
