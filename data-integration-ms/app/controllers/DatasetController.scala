@@ -19,7 +19,7 @@ import scala.util.Try
 
 
 @Singleton
-class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractController(cc){
+class DatasetController  @Inject()(cc: ControllerComponents, h2: H2Controller) extends AbstractController(cc){
 
   /* Classes and implicit values to generate the Dataset json: */
   case class DatasetCollection(datasets: Seq[Dataset])
@@ -168,7 +168,7 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       Logger.info(s"File $id-$name.csv added!")
 
       Logger.info("Uploading dataset to H2 ...")
-      uploadToDB(new File(s"/$currentDirectory/datasets/$id-$name.csv"))
+      h2.uploadToDB(new File(s"/$currentDirectory/datasets/$id-$name.csv"))
       Logger.info("Dataset uploaded to H2")
 
       Redirect(routes.HomeController.index)
@@ -190,212 +190,38 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       def check = Future{ f.exists } //returns "Future" monad
       def remove = Future{ f.delete() } //returns "Future" monad
     }*/
-
     Logger.info(s"Calling delete action (id:$id) ...")
     var fileDeleted = deleteFile(id)
 
-    if (fileDeleted) Redirect(routes.HomeController.index)
+    if (fileDeleted) {
+      val dsId = "%03d".format(id.toInt)
+      val name = h2.getDatasetName(dsId)
+      h2.dropTable(name)
+      Redirect(routes.HomeController.index)
+    }
     else NotFound(views.html.todo())
   }
 
   def show(id: String) = Action {
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-    val x = "%03d".format(id.toInt)
-    var columnNames = Array[String]()
-    var rows = Array[Array[String]]()
-    var lenght = 0
-
-    try{
-      var name = ""
-      val rs = stmt.executeQuery(s"SELECT name FROM DATASET WHERE id=$x")
-      if (rs.next()) name = rs.getString("name")
-
-      name = name.toUpperCase()
-      val str = s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$name'"
-
-
-
-      val rs2 = stmt.executeQuery(str)
-      while (rs2.next()){
-        columnNames = columnNames :+ rs2.getString("COLUMN_NAME")
-      }
-
-      val rs4 = stmt.executeQuery(s"SELECT COUNT(*) as RESULT FROM $name;")
-      if (rs4.next()) lenght = rs4.getInt("RESULT")
-      println(lenght)
-
-
-      val rs3 = stmt.executeQuery(s"SELECT * FROM $name WHERE DATASET_ID < 11")
-      while (rs3.next()){
-        var row = ""
-        for (columnName <- columnNames){
-          row += rs3.getString(columnName) + "\t"
-        }
-        rows = rows :+ row.split("\t").drop(1)
-      }
-    }
-    val pages =  if (lenght % 10 == 0) ((1 to (lenght / 10)).toArray) else ((1 to (lenght / 10) + 1).toArray)
-    Ok(views.html.dataset(columnNames.drop(1), rows, 1, pages))
+    val dsId = "%03d".format(id.toInt)
+    val name = h2.getDatasetName(dsId)
+    val columnNames = h2.getDatasetHeaders(name)
+    val length = h2.getDatasetLength(name)
+    val rows = h2.getDatasetContent(name, columnNames)
+    val pages =  if (length % 10 == 0) ((1 to (length / 10)).toArray) else ((1 to (length / 10) + 1).toArray)
+    Ok(views.html.dataset(id, name, columnNames.drop(1), rows, 1, pages))
   }
 
   def show_page(id: String, pagNumb: Int) = Action {
-    /*val currentDirectory = new java.io.File(".").getCanonicalPath
-    val dir = new File(s"/$currentDirectory/datasets/")
-
-    val files = getListFile(dir, id.toInt)
-    val file = files.head
-    val bufferedSource = Source.fromFile(file.getAbsolutePath)
-    var rows = Array[Array[String]]()
-
-    for(line <- bufferedSource.getLines()){
-      rows = rows :+ line.split("\t")
-    }
-    val x = pagNumb - 1
-    val headers = rows.apply(0)
-    val dataRows = rows.drop(1).slice(x * 10,(x+1) * 10)
-    val pages = (1 to (rows.length / 10)).toArray
-    Ok(views.html.dataset(headers, dataRows,pagNumb, pages)) */
-
-    println(id)
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-    val x = "%03d".format(id.toInt)
-    var columnNames = Array[String]()
-    var rows = Array[Array[String]]()
-    var lenght = 0
-
-    try{
-      var name = ""
-      val rs = stmt.executeQuery(s"SELECT name FROM DATASET WHERE id=$x")
-      if (rs.next()) name = rs.getString("name")
-
-      name = name.toUpperCase()
-      val str = s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$name'"
-
-
-
-      val rs2 = stmt.executeQuery(str)
-      while (rs2.next()){
-        columnNames = columnNames :+ rs2.getString("COLUMN_NAME")
-      }
-
-      val rs4 = stmt.executeQuery(s"SELECT COUNT(*) as RESULT FROM $name;")
-      if (rs4.next()) lenght = rs4.getInt("RESULT")
-      println(lenght)
-
-      val from = (pagNumb - 1) * 10
-      val to = pagNumb * 10
-      println(s"FROM $from TO $to")
-      val rs3 = stmt.executeQuery(s"SELECT * FROM $name WHERE DATASET_ID > $from AND DATASET_ID < $to")
-      while (rs3.next()){
-        var row = ""
-        for (columnName <- columnNames){
-          row += rs3.getString(columnName) + "\t"
-        }
-        rows = rows :+ row.split("\t").drop(1)
-      }
-    }
-    val pages =  if (lenght % 10 == 0) ((1 to (lenght / 10)).toArray) else ((1 to (lenght / 10) + 1).toArray)
-    Ok(views.html.dataset(columnNames.drop(1), rows, pagNumb, pages))
+    val dsId = "%03d".format(id.toInt)
+    val name = h2.getDatasetName(dsId)
+    val columnNames = h2.getDatasetHeaders(name)
+    val length = h2.getDatasetLength(name)
+    val rows = h2.getDatasetContent(name, columnNames)
+    val pages =  if (length % 10 == 0) ((1 to (length / 10)).toArray) else ((1 to (length / 10) + 1).toArray)
+    Ok(views.html.dataset(id, name, columnNames.drop(1), rows, pagNumb, pages))
   }
 
-  def uploadToDB(file: File) = {
-
-    var rows : Array[String] = Array[String]()
-    val bufferedSource = Source.fromFile(file.getAbsolutePath)
-    for(line <- bufferedSource.getLines()){
-      rows = rows :+ line
-    }
-    val args = file.getName.split("-")
-    val id = args(0)
-    val name = args(1).replace(".csv","")
-    val headers = rows.apply(0).split("\t")
-    val data = rows.drop(1)
-
-    createTable(name, headers)
-    uploadData(id, name, headers, data)
-  }
-
-  def uploadData(id: String, name: String, headers: Array[String], data: Array[String]) = {
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    var colNames = "DATASET_ID, "
-    for (header <- headers){ colNames += header + ',' }
-    colNames = colNames.dropRight(1)
-
-    try {
-      stmt.execute(s"INSERT INTO DATASET (id, name) VALUES ('$id', '$name') ;")
-      var count = 1
-      for(line <- data){
-
-        var values = s"$count,"
-
-        for(v <- line.split("\t")){
-          if(v != "") values += "\'" + v.replace("'", "''") + "\',"
-          else values += "\'none\',"
-        }
-        values = values.dropRight(1)
-        stmt.execute(s"INSERT INTO $name ($colNames) VALUES ($values);")
-        count += 1;
-      }
-
-    } finally {
-      conn.close()
-      stmt.close()
-    }
-
-
-
-  }
-
-  def createTable(name: String, headers: Array[String]) = {
-
-    var cols = "DATASET_ID INT PRIMARY KEY, "
-    for(header <- headers){ cols += s"$header VARCHAR(255)," }
-    cols = cols.dropRight(1)
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    try{
-      stmt.execute(s" DROP TABLE $name")
-    }catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    }
-
-    try {
-      val stmt = conn.createStatement
-      stmt.execute(s"CREATE TABLE $name ($cols);")
-    }
-    catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    }finally {
-      conn.close()
-    }
-
-  }
-
-  def dropTable(name: String) = {
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    try{
-      stmt.execute(s"DROP TABLE $name;")
-      stmt.execute(s"DELETE FROM DATASET WHERE $name = name;")
-    }catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    } finally {
-      stmt.close()
-      conn.close()
-    }
-
-  }
 
   def deleteFile(id: String): Boolean = {
 
@@ -409,7 +235,6 @@ class DatasetController  @Inject()(cc: ControllerComponents) extends AbstractCon
       val fileName = file.getName
       Logger.info(s"Found file with id=$id\n -> $fileName")
       val name = fileName.split("-")(1).replace(".csv","")
-      dropTable(name)
       if (file.delete()) deleted = true
     }
     deleted

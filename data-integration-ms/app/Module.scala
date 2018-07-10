@@ -1,11 +1,12 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
-import play.api.db.Databases
 import services.{ApplicationTimer, AtomicCounter, Counter}
-import controllers.DatasetController
+import controllers.H2Controller
+import javax.inject.Inject
 import org.h2.jdbc.JdbcSQLException
 import play.api.Logger
+import play.api.db.Databases
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -27,20 +28,12 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
-    initDB()
+    //Init h2 DB
+    val h2 = new H2Controller()
+    h2.initDB()
+    h2.initDatasets()
   }
 
-  def initDB() = {
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
 
-    try{
-      stmt.execute("CREATE TABLE DATASET (ID INT PRIMARY KEY , NAME VARCHAR(100) UNIQUE )")
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    }finally {
-      conn.close()
-    }
-  }
 
 }
