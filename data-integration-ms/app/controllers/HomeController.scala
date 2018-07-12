@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
  * application's home page.
  */
 @Singleton
-class HomeController @Inject()(cc: ControllerComponents, dsc: DatasetController) extends AbstractController(cc) {
+class HomeController @Inject()(h2: H2Controller, cc: ControllerComponents, dsc: DatasetController) extends AbstractController(cc) {
 
   /**
    * Create an Action to render an HTML page with a welcome message.
@@ -24,19 +24,11 @@ class HomeController @Inject()(cc: ControllerComponents, dsc: DatasetController)
    */
   def index = Action {
 
-    val currentDirectory = new java.io.File(".").getCanonicalPath
-    val okFileExtensions = List("csv")
-    val files = dsc.getListOfFiles(new File(s"/$currentDirectory/datasets/"), okFileExtensions)
+    val datasets = h2.getDatasets()
+    datasets.map(dataset => dataset.formatId())
 
-    def getDataset(file: File): Dataset = {
-      val fileName = file.getName
-      val datasetArgs = fileName.split("-")
-      val id = datasetArgs.apply(0)
-      val name = datasetArgs.apply(1).replace(".csv", "")
-      Dataset(id, name)
-    }
-
-    Ok(views.html.index(files.map(getDataset(_))))
+    //Ok(views.html.index(files.map(getDataset(_))))
+    Ok(views.html.index(datasets))
   }
 
 }

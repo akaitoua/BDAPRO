@@ -29,7 +29,7 @@
                         <a class="nav-link" href="@routes.HomeController.index()">Home <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link disabled" href="#">Integrations</a>
+                        <a class="nav-link" href="@routes.IntegrationController.index()">Integrations</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link disabled" href="#">Documentation</a>
@@ -51,17 +51,16 @@
             @content
 
         </main>
-
         <footer class="footer">
             <div class="container">
                 <span class="text-muted">
-                    MITBD is a project developed at the DIMA (TU Berlin)
+            MITBD is a project developed at the DIMA (TU Berlin)
                     <a href="https://www.tu-berlin.de/" target="_blank">
                         <img src="@routes.Assets.versioned("images/tu-berlin.png")" class="rounded float-right s-icon" id="tu-logo">
                     </a>
-                        <a href="https://www.dima.tu-berlin.de/" target="_blank">
-                            <img src="@routes.Assets.versioned("images/dima.png")" class="rounded float-right s-icon" id="dima-logo">
-                        </a>
+                    <a href="https://www.dima.tu-berlin.de/" target="_blank">
+                        <img src="@routes.Assets.versioned("images/dima.png")" class="rounded float-right s-icon" id="dima-logo">
+                    </a>
                 </span>
 
             </div>

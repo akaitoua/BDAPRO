@@ -1,0 +1,48 @@
+@(datasets: Array[Dataset])
+@main("Integrations")("Select two datasets:") {
+    <form method="post" action="@routes.IntegrationController.config" enctype="multipart/form-data">
+
+        <!-- Selection of the Dataset #1 -->
+        <div class="form-row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Dataset #1</label>
+                    </div>
+                    <select class="custom-select" name="dsOneId" id="inputGroupSelect01">
+                        <option selected>-- Select a Dataset --</option>
+                        @for(dataset <- datasets){
+                            <option value="@dataset.id">@dataset.name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selection of Dataset #2 -->
+        <div class="form-row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect02">Dataset #2</label>
+                    </div>
+                    <select class="custom-select" name="dsTwoId" id="inputGroupSelect02">
+                        <option selected>-- Select a Dataset --</option>
+                        @for(dataset <- datasets){
+                            <option value="@dataset.id">@dataset.name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Buttons -->
+        <div class="form-row">
+            <div class="col">
+                <button type="reset" class="btn btn-secondary">Reset</button>
+                <button type="submit" class="btn btn-primary">Next</button>
+            </div>
+        </div>
+
+    </form>
+}

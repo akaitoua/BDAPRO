@@ -1,0 +1,76 @@
+@(dsOneName: String, dsOneFields: Array[String], dsTwoName: String, dsTwoFields: Array[String])
+@main("Integrations")(s"Integrating $dsOneName with $dsTwoName:") {
+
+    <form method="get" action="@routes.IntegrationController.delete("")" enctype="multipart/form-data">
+        <!-- Integration Algorithm Properties -->
+        <div class="form-row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Blocking Algorithm:</label>
+                    </div>
+                    <select class="custom-select" name="dsOneId" id="inputGroupSelect01">
+                        <option selected>-- Select a Algorithm --</option>
+                    </select>"
+                </div>
+            </div>
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Comparison Algorithm:</label>
+                    </div>
+                    <select class="custom-select" name="dsOneId" id="inputGroupSelect01">
+                        <option selected>-- Select a Algorithm --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Same DS Comparison:</label>
+                    </div>
+                    <select class="custom-select" name="dsOneId" id="inputGroupSelect01">
+                        <option selected>No</option>
+                        <option>Yes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datasets Field Selection -->
+        <div class="form-row">
+            <div class="col">
+                <h3><span class="badge badge-light">Dataset #1: @dsOneName </span></h3>
+                @for(field <- dsOneFields){
+                    <input type="checkbox" name="dsOneField" checked="checked" value="@field"> @field<br>
+                }
+
+            </div>
+
+            <div class="col">
+                <h3><span class="badge badge-light">Dataset #2: @dsTwoName </span></h3>
+                @for(field <- dsTwoFields){
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked="checked" value="@field" id="defaultCheck1">
+                        <label class="form-check-label" for="defaultCheck1">
+                        @field
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-row m-3">
+            <div class="col">
+                <a href="@routes.IntegrationController.index()">
+                    <button type="button" class="btn btn-secondary">Cancel</button>
+                </a>
+                <button type="submit" class="btn btn-primary">Integrate</button>
+            </div>
+        </div>
+    </form>
+
+}

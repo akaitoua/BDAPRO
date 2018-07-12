@@ -160,12 +160,11 @@ class DatasetController  @Inject()(cc: ControllerComponents, h2: H2Controller) e
     val currentDirectory = new java.io.File(".").getCanonicalPath
     val okFileExtensions = List("csv")
     val files = getListOfFiles(new File(s"/$currentDirectory/datasets/"), okFileExtensions)
-    var name = ""
     val id = "%03d".format(files.length + 1)
 
-    request.body.asFormUrlEncoded("datasetName").map( { datasetName =>
-        name = datasetName.toString.trim
-    })
+    val name = request.body.asFormUrlEncoded("datasetName").map( { datasetName =>
+        datasetName.toString.replace(" ", "_").trim
+    }).head
 
     Logger.info("New dataset name: " + name)
 
@@ -213,23 +212,23 @@ class DatasetController  @Inject()(cc: ControllerComponents, h2: H2Controller) e
   }
 
   def show(id: String) = Action {
-    val dsId = "%03d".format(id.toInt)
-    val name = h2.getDatasetName(dsId)
+    val name = h2.getDatasetName("%03d".format(id.toInt))
+    val displayName = name.replace("_", " ").capitalize
     val columnNames = h2.getDatasetHeaders(name)
     val length = h2.getDatasetLength(name)
     val rows = h2.getDatasetContent(name, columnNames)
     val pages =  if (length % 10 == 0) ((1 to (length / 10)).toArray) else ((1 to (length / 10) + 1).toArray)
-    Ok(views.html.dataset(id, name, columnNames.drop(1), rows, 1, pages))
+    Ok(views.html.dataset(id, displayName, columnNames.drop(1), rows, 1, pages))
   }
 
   def show_page(id: String, pagNumb: Int) = Action {
-    val dsId = "%03d".format(id.toInt)
-    val name = h2.getDatasetName(dsId)
+    val name = h2.getDatasetName("%03d".format(id.toInt))
+    val displayName = name.replace("_", " ").capitalize
     val columnNames = h2.getDatasetHeaders(name)
     val length = h2.getDatasetLength(name)
     val rows = h2.getDatasetContent(name, columnNames)
     val pages =  if (length % 10 == 0) ((1 to (length / 10)).toArray) else ((1 to (length / 10) + 1).toArray)
-    Ok(views.html.dataset(id, name, columnNames.drop(1), rows, pagNumb, pages))
+    Ok(views.html.dataset(id, displayName, columnNames.drop(1), rows, pagNumb, pages))
   }
 
 

@@ -7,20 +7,20 @@
 GET     /                                   controllers.HomeController.index
 
 #Dataset
-GET     /api/datasets                       controllers.DatasetController.index
-GET     /api/dataset/:id                    controllers.DatasetController.read(id: String)
-POST    /api/dataset                        controllers.DatasetController.upload
-POST    /api/dataset/update:id              controllers.DatasetController.update(id: String)
-GET     /api/dataset/delete/:id             controllers.DatasetController.delete(id: String)
-GET     /api/dataset/show/:id               controllers.DatasetController.show(id: String)
-GET     /api/dataset/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
+GET     /datasets                       controllers.DatasetController.index
+GET     /dataset/:id                    controllers.DatasetController.read(id: String)
+POST    /dataset                        controllers.DatasetController.upload
+POST    /dataset/update:id              controllers.DatasetController.update(id: String)
+GET     /dataset/delete/:id             controllers.DatasetController.delete(id: String)
+GET     /dataset/show/:id               controllers.DatasetController.show(id: String)
+GET     /dataset/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
 
 #Integrations
-GET     /api/integrations               controllers.IntegrationController.index
-GET     /api/integration/:id            controllers.IntegrationController.read(id: String)
-POST    /api/integration                controllers.IntegrationController.upload
-PUT     /api/integration                controllers.IntegrationController.update(id: String)
-DELETE  /api/integration/:id            controllers.IntegrationController.delete(id: String)
+GET     /integrations                       controllers.IntegrationController.index
+GET     /integrations/:id_one/:id_two       controllers.IntegrationController.read(id_one: String, id_two: String)
+POST    /integration                        controllers.IntegrationController.config
+PUT     /integration                        controllers.IntegrationController.update(id: String)
+DELETE  /integration/:id                    controllers.IntegrationController.delete(id: String)
 
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count

@@ -7,6 +7,7 @@ import org.h2.jdbc.JdbcSQLException
 import play.api.Logger
 import play.api.mvc.{AbstractController, ControllerComponents}
 import play.api.db._
+import models.Dataset
 
 import scala.io.Source
 
@@ -36,6 +37,31 @@ class H2Controller {
       print(file)
       uploadToDB(file)
     }
+
+  }
+
+  def getDatasets() ={
+
+    val conn = Databases.inMemory().getConnection()
+    val stmt = conn.createStatement
+    var infos = Array[Dataset]()
+
+    try {
+      val rs = stmt.executeQuery("SELECT * FROM DATASET")
+      while (rs.next()){
+        val dsId = rs.getString("ID")
+        val dsName = rs.getString("NAME").replace("_", " ")
+        infos = infos :+ Dataset(dsId,dsName)
+      }
+
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    } finally {
+      stmt.close()
+      conn.close()
+    }
+
+    infos
 
   }
 
@@ -74,7 +100,7 @@ class H2Controller {
 
         for (v <- line.split("\t")) {
           if (v != "") values += "\'" + v.replace("'", "''") + "\',"
-          else values += "\'none\',"
+          else values += "\' \',"
         }
         values = values.dropRight(1)
         stmt.execute(s"INSERT INTO $name ($colNames) VALUES ($values);")
@@ -160,7 +186,7 @@ class H2Controller {
 
     val dsName = name.toUpperCase
     try {
-      val rs = stmt.executeQuery(s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$dsName'")
+      val rs = stmt.executeQuery(s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$dsName'" )
       while (rs.next()){
         headers = headers :+ rs.getString("COLUMN_NAME")
       }
