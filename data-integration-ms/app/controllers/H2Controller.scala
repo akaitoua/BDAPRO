@@ -20,6 +20,13 @@ class H2Controller {
 
     try{
       stmt.execute("CREATE TABLE DATASET (ID INT PRIMARY KEY , NAME VARCHAR(100) UNIQUE )")
+      stmt.execute("CREATE TABLE INTEGRATION (INTEGRATION_ID INT PRIMARY KEY, " +
+        "DATASET_ONE VARCHAR(50)," +
+        "DATASET_TWO VARCHAR(50)," +
+        "BLOCKING_ALG VARCHAR(50)," +
+        "COMPARISON_ALG VARCHAR(50)," +
+        "SAME_DS_COMP BOOLEAN," +
+        "THRESHOLD FLOAT)")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
     }finally {

@@ -1,10 +1,31 @@
 package models
 
-import play.api.libs.json.{Json, Writes}
 
 case class Dataset(var id: String, var name: String) {
+
+  var fields = Array[String]()
+  var data = Array[String]()
+
+  def displayName(): String = {
+    name.replace("_", " ")
+  }
+
   def formatId() = {
     this.id = "%03d".format(id.toInt)
   }
+
+  def addField(field: String) = {
+    fields = fields :+ field
+  }
+
+  def addData(row: String) = {
+    data = data :+ row
+  }
+
+  def getFileName() = {
+    s"$id-$name.csv"
+  }
+
+  override def toString(): String = displayName();
 }
 

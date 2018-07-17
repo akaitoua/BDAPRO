@@ -19,6 +19,7 @@ GET     /dataset/show/:id/page/:numb    controllers.DatasetController.show_page(
 GET     /integrations                       controllers.IntegrationController.index
 GET     /integrations/:id_one/:id_two       controllers.IntegrationController.read(id_one: String, id_two: String)
 POST    /integration                        controllers.IntegrationController.config
+POST    /integrations                        controllers.IntegrationController.upload
 PUT     /integration                        controllers.IntegrationController.update(id: String)
 DELETE  /integration/:id                    controllers.IntegrationController.delete(id: String)
 
