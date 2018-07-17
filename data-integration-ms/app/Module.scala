@@ -2,7 +2,7 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import services.{ApplicationTimer, AtomicCounter, Counter}
-import controllers.H2Controller
+import controllers.{DatasetDBController, FilesController}
 import javax.inject.Inject
 import org.h2.jdbc.JdbcSQLException
 import play.api.Logger
@@ -29,9 +29,11 @@ class Module extends AbstractModule {
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
     //Init h2 DB
-    val h2 = new H2Controller()
-    h2.initDB()
-    h2.initDatasets()
+    println(s"##### Init #####")
+    val fc = new FilesController
+    val datasetDB = new DatasetDBController()
+    datasetDB.initDB()
+    datasetDB.initDatasets(fc.getFiles())
   }
 
 

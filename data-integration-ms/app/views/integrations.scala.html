@@ -1,6 +1,6 @@
 @(datasets: Array[Dataset])
 @main("Integrations")("Select two datasets:") {
-    <form method="post" action="@routes.IntegrationController.config" enctype="multipart/form-data">
+    <form method="post" action="@routes.DatasetController.integrate()" enctype="multipart/form-data">
 
         <!-- Selection of the Dataset #1 -->
         <div class="form-row">

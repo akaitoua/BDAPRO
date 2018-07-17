@@ -4,30 +4,26 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                                   controllers.HomeController.index
+GET     /                                controllers.DatasetController.index
 
 #Dataset
-GET     /datasets                       controllers.DatasetController.index
-GET     /dataset/:id                    controllers.DatasetController.read(id: String)
-POST    /dataset                        controllers.DatasetController.upload
-POST    /dataset/update:id              controllers.DatasetController.update(id: String)
-GET     /dataset/delete/:id             controllers.DatasetController.delete(id: String)
-GET     /dataset/show/:id               controllers.DatasetController.show(id: String)
-GET     /dataset/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
+GET     /datasets                        controllers.DatasetController.index
+GET     /datasets/:id                    controllers.DatasetController.download(id: String)
+POST    /datasets                        controllers.DatasetController.upload
+POST    /datasets/update:id              controllers.DatasetController.update(id: String)
+GET     /datasets/delete/:id             controllers.DatasetController.delete(id: String)
+GET     /datasets/show/:id               controllers.DatasetController.show(id: String)
+GET     /datasets/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
+
+POST    /integrate                       controllers.DatasetController.integrate
 
 #Integrations
 GET     /integrations                       controllers.IntegrationController.index
 GET     /integrations/:id_one/:id_two       controllers.IntegrationController.read(id_one: String, id_two: String)
-POST    /integration                        controllers.IntegrationController.config
+
 POST    /integrations                        controllers.IntegrationController.upload
 PUT     /integration                        controllers.IntegrationController.update(id: String)
 DELETE  /integration/:id                    controllers.IntegrationController.delete(id: String)
-
-# An example controller showing how to use dependency injection
-GET     /count                      controllers.CountController.count
-
-# An example controller showing how to write asynchronous code
-GET     /message                    controllers.AsyncController.message
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

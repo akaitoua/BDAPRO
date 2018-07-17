@@ -1,5 +1,7 @@
 package models
 
+import java.io.File
+
 
 case class Dataset(var id: String, var name: String) {
 
@@ -23,7 +25,8 @@ case class Dataset(var id: String, var name: String) {
   }
 
   def getFileName() = {
-    s"$id-$name.csv"
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    s"/$currentDirectory/datasets/$id-$name.csv"
   }
 
   override def toString(): String = displayName();

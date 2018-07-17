@@ -62,18 +62,28 @@ class DatasetDBController {
   }
 
   def delete(id: String) = {
+    Logger.info(s"DatasetDBController delete action (id:$id) ...")
     val name = getDatasetName(id)
+    println(name)
     dropTable(name)
   }
 
   // DB:
 
   def initDB() = {
+    Logger.info(s"Initializing DB ...")
+
     val conn = Databases.inMemory().getConnection()
     val stmt = conn.createStatement
 
     try{
-      stmt.execute("CREATE TABLE DATASET (ID VARCHAR(10) PRIMARY KEY , NAME VARCHAR(100) UNIQUE )")
+      stmt.execute("DROP TABLE DATASET;")
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    }
+
+    try{
+      stmt.execute("CREATE TABLE DATASET (ID VARCHAR(10) PRIMARY KEY , NAME VARCHAR(100) UNIQUE, SIZE INT)")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
     }finally {
@@ -82,6 +92,8 @@ class DatasetDBController {
   }
 
   def initDatasets(files : List[File]) = {
+
+    Logger.info(s"Initializing Datasets ...")
 
     for(file <-files){
       print(file)
@@ -117,7 +129,7 @@ class DatasetDBController {
     try{
       val oldName = getDatasetName(dsId)
       stmt.execute(s"ALTER TABLE $oldName RENAME TO $newName;")
-      stmt.execute(s"UPDATE DATASET SET NAME = '$newName' WHERE ID = $dsId")
+      stmt.execute(s"UPDATE DATASET SET NAME = '$newName' WHERE ID = '$dsId'")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
     } finally {
@@ -127,6 +139,8 @@ class DatasetDBController {
   }
 
   def createDatasetTable(dataset: Dataset) = {
+
+    Logger.info(s"Creating Dataset: $dataset ...")
 
     var cols = "COLUMN_ID INT PRIMARY KEY, "
     for(field <- dataset.fields){ cols += s"$field VARCHAR(255)," }
@@ -139,15 +153,19 @@ class DatasetDBController {
     try{
       stmt.execute(s" DROP TABLE $name")
     }catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
+      case e: JdbcSQLException => Logger.error(e.getMessage)
+    }finally {
+      conn.close()
     }
 
+    val conn_2 = Databases.inMemory().getConnection()
+    val stmt_2 = conn_2.createStatement
+
     try {
-      val stmt = conn.createStatement
-      stmt.execute(s"CREATE TABLE $name ($cols);")
+      stmt_2.execute(s"CREATE TABLE $name ($cols);")
     }
     catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
+      case e: JdbcSQLException => Logger.error(e.getMessage)
     }finally {
       conn.close()
     }
@@ -164,9 +182,9 @@ class DatasetDBController {
     var colNames = "COLUMN_ID, "
     for (field <- dataset.fields){ colNames += field + ',' }
     colNames = colNames.dropRight(1)
-
+    val size = dataset.data.length
     try {
-      stmt.execute(s"INSERT INTO DATASET (id, name) VALUES ('$id', '$name') ;")
+      stmt.execute(s"INSERT INTO DATASET (id, name, size) VALUES ('$id', '$name', $size);")
       var count = 1
       for (line <- dataset.data) {
 
@@ -203,7 +221,6 @@ class DatasetDBController {
     val fields = rows.apply(0).split("\t")
     val data = rows.drop(1)
 
-
     val ds = Dataset(id, name)
     fields.map(field => ds.addField(field))
     data.map(row => ds.addData(row))
@@ -216,9 +233,53 @@ class DatasetDBController {
     val stmt = conn.createStatement
 
     try{
-      val rs = stmt.executeQuery(s"SELECT name FROM DATASET WHERE id=$id")
-      if (rs.next()) return rs.getString("name")
-      else return null
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE ID='$id'")
+      if (rs.next()) return rs.getString("NAME")
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    } finally {
+      conn.close()
+      stmt.close()
+    }
+
+    return ""
+  }
+
+  def getDatasetSize(id: String): Int = {
+
+    val conn = Databases.inMemory().getConnection()
+    val stmt = conn.createStatement
+
+    try{
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE ID='$id'")
+      if (rs.next()) return rs.getInt("SIZE")
+    } catch {
+      case e: JdbcSQLException => Logger.info(e.getMessage)
+    } finally {
+      conn.close()
+      stmt.close()
+    }
+
+    return -1
+  }
+
+  def getDataset(id: String): Dataset = {
+
+    val conn = Databases.inMemory().getConnection()
+    val stmt = conn.createStatement
+
+    try{
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE id='$id'")
+      while (rs.next()) {
+        val name = rs.getString("name")
+        val id =rs.getString("id")
+        val ds = Dataset(id,name)
+        val fields = getDatasetFields(name)
+        fields.map(field => ds.addField(field))
+        return ds
+      }
+      Logger.error("Not found!!")
+      return null
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
         return null
@@ -248,7 +309,7 @@ class DatasetDBController {
     }
 
 
-    return headers
+    return headers.drop(1)
   }
 
   def getDatasetContent(dataset: Dataset, from: Int = 1, to: Int = 10): Array[Array[String]] = {
@@ -264,7 +325,7 @@ class DatasetDBController {
         for (field <- dataset.fields){
           row += rs.getString(field) + "\t"
         }
-        rows = rows :+ row.split("\t").drop(1)
+        rows = rows :+ row.split("\t")
       }
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)

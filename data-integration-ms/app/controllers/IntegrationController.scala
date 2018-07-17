@@ -8,11 +8,11 @@ import play.api.Logger
 import play.api.mvc._
 
 @Singleton
-class IntegrationController  @Inject()(h2: H2Controller, cc: ControllerComponents) extends AbstractController(cc){
+class IntegrationController  @Inject()(dsDB: DatasetDBController, cc: ControllerComponents) extends AbstractController(cc){
 
   def index = Action {
     Logger.info("Calling integrations index ...")
-    val names = h2.getDatasets()
+    val names = dsDB.show()
     Ok(views.html.integrations(names))
   }
 
@@ -23,14 +23,14 @@ class IntegrationController  @Inject()(h2: H2Controller, cc: ControllerComponent
   def config = Action(parse.multipartFormData)  { request =>
     Logger.info("Calling integrations upload ...")
     val dsOneId = request.body.asFormUrlEncoded("dsOneId").map( { dsOneId => dsOneId.toString.trim}).head
-    val dsOneName = h2.getDatasetName("%03d".format(dsOneId.toInt))
-    val dsOneFields = h2.getDatasetHeaders(dsOneName).filter(field => field != "DATASET_ID")
+    val dsOneName = dsDB.getDatasetName("%03d".format(dsOneId.toInt))
+    val dsOneFields = dsDB.getDatasetFields(dsOneName).filter(field => field != "DATASET_ID")
     val dsOne : Dataset = Dataset(dsOneId, dsOneName)
     dsOneFields.map(field => dsOne.addField(field))
 
     val dsTwoId = request.body.asFormUrlEncoded("dsTwoId").map( { dsTwoId => dsTwoId.toString.trim}).head
-    val dsTwoName = h2.getDatasetName("%03d".format(dsTwoId.toInt))
-    val dsTwoFields = h2.getDatasetHeaders(dsOneName).filter(field => field != "DATASET_ID")
+    val dsTwoName = dsDB.getDatasetName("%03d".format(dsTwoId.toInt))
+    val dsTwoFields = dsDB.getDatasetFields(dsTwoName).filter(field => field != "DATASET_ID")
     val dsTwo : Dataset = Dataset(dsTwoId, dsTwoName)
     dsTwoFields.map(field => dsTwo.addField(field))
 
