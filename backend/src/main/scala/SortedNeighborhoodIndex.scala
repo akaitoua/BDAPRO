@@ -48,7 +48,7 @@ object SortedNeighborhoodIndex extends App {
 //
 //  System.exit(0)
 
-  case class EntityMatch(e1:String,e2:String,e3:String,e4:String,similarity:Double)
+  case class EntityMatch(id1:String,id2:String,name1:String,name2:String,similarity:Double)
 
   def produceSimilarity(row1:Array[String],row2:Array[String]):Option[EntityMatch]={
     lazy val jd = new JaccardDistance()
@@ -74,7 +74,7 @@ object SortedNeighborhoodIndex extends App {
     }
   }
 
-  val  simCalculated= sortedNBlocked.map(x=>produceSimilarity(x._2.fields,x._1.fields)).filter(x=>{ x != None})
+  val  simCalculated= sortedNBlocked.map(x=>produceSimilarity(x._2.fields,x._1.fields)).filter(x=>{ x != None}).map(x=>(Array(x.get.id1,x.get.id2,x.get.similarity.toString).mkString(",")))
 
   simCalculated.saveAsTextFile(output)
   spark.stop()
