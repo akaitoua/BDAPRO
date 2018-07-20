@@ -6,7 +6,6 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import partitioners.SoundBased
-import s2cc.Schema2CaseClass
 
 import scala.tools.nsc.transform.patmat.Lit
 
@@ -20,16 +19,14 @@ object Application extends App {
     val identityCol = Array("company_name","country")
     val keyGenCols = concat_ws("",col(identityCol(0)),col(identityCol(1)))
 
-
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
     conf.setMaster("local")
+    val spark = SparkSession.builder().appName("Data Integration Microservices").config(conf).getOrCreate()
+    import spark.implicits._
 
     // Partitioner
     val partitioner = new SoundBased()
-
-    val spark = SparkSession.builder().appName("Data Integration Microservices").config(conf).getOrCreate()
-    import spark.implicits._
     val applyPartitioner = udf((x: String) => {
       partitioner.getSoundCode(x)
     })
@@ -75,26 +72,6 @@ object Application extends App {
     val  simCalculated= joined.mapValues(x=>produceSimilarity(x._2,x._1))
 
     simCalculated.saveAsTextFile(output)
-
-
-//    // TODO: Filter single keys/keys in only one dataset and mark no duplicates
-//     ls.show(10)
-
-//    case class EntityMatch(e1:String,e2:String,similarity:Double)
-////
-//    def produceSimilarity(row1:Row):EntityMatch={
-//        lazy val jd = new JaccardDistance()
-//         val row =EntityMatch(row1.getString(1),row1.getString,1-jd.apply(row1,row2))
-//      row
-//    }
-//
-//   val  simCalculated= joinedrdd.mapValues(x=>produceSimilarity(x._2,x._1))
-//
-//   if (Files.exists(Paths.get(output))){
-//     Files.delete(Paths.get(output))
-//   }
-//   simCalculated.saveAsTextFile(output)
-
-   spark.stop()
+    spark.stop()
   }
 }
