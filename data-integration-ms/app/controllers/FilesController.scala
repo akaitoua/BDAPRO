@@ -1,17 +1,33 @@
 package controllers
 
-import java.io.File
+import java.io.{File, FileWriter, PrintWriter}
 
 import javax.inject.Singleton
+import models.Dataset
 import play.api.Logger
 
+import scala.io.Source
 import scala.util.Try
 
 @Singleton
 class FilesController {
 
-  def addFile() = {
+  def createDataset(file: File): Dataset = {
 
+    var rows: Array[String] = Array[String]()
+    val bufferedSource = Source.fromFile(file.getAbsolutePath)
+    for (line <- bufferedSource.getLines()) {
+      rows = rows :+ line
+    }
+
+    val name = file.getName.replace(".csv", "")
+    val fields = rows.apply(0).split("\t")
+    val data = rows.drop(1)
+
+    val ds = Dataset(-1, name)
+    fields.map(field => ds.addField(field))
+    data.map(row => ds.addData(row))
+    ds
   }
 
   /*
@@ -37,7 +53,7 @@ class FilesController {
     val dir = new File(s"/$currentDirectory/datasets/")
 
     dir.listFiles.filter(_.isFile).toList.filter { file =>
-      val fileName =file.getName()
+      val fileName = file.getName()
       val args = fileName.split("-")
       val dsId = args.apply(0)
       if (args.length == 1) false
@@ -45,24 +61,24 @@ class FilesController {
     }
   }
 
-  def deleteFile(id: String): Boolean = {
+  def deleteFile(name: String): Boolean = {
 
-    val files = getListFile(id.toInt)
-    var deleted = false
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    val file = new File(s"/$currentDirectory/datasets/$name.csv")
+    file.delete()
 
-    for (file <- files){
-      val fileName = file.getName
-      Logger.info(s"Found file with id=$id\n -> $fileName")
-      if (file.delete()) deleted = true
-    }
-    deleted
   }
 
   def mv(oldName: String, newName: String) =
     Try(new File(oldName).renameTo(new File(newName))).getOrElse(false)
 
-  def createDataset(file: File) = {
-
+  def appendLine(filePath: String, lines: Array[String]): Unit = {
+    val pw = new PrintWriter(new File(filePath))
+    try {
+      lines.foreach(line => pw.write(s"$line\n"))
+    } finally {
+      pw.close
+    }
   }
 
 }

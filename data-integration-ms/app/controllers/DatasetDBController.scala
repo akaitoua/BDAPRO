@@ -6,33 +6,36 @@ import javax.inject.Inject
 import models.Dataset
 import org.h2.jdbc.JdbcSQLException
 import play.api.Logger
-import play.api.db.Databases
+import play.api.db._
+import play.api.db.evolutions.Evolutions
 
 import scala.io.Source
 
-class DatasetDBController {
+class DatasetDBController @Inject()(db: Database) {
 
   // CRUD:
 
   def add(dataset: Dataset) = {
+
     createDatasetTable(dataset)
     uploadData(dataset)
+
   }
 
   /*
   Get a list of all the Datasets of the system
    */
   def show() = {
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
     var datasets = Array[Dataset]()
 
     try {
       val rs = stmt.executeQuery("SELECT * FROM DATASET")
-      while (rs.next()){
-        val dsId = rs.getString("ID")
+      while (rs.next()) {
+        val dsId = rs.getInt("DATASET_ID")
         val dsName = rs.getString("NAME").replace("_", " ")
-        datasets = datasets :+ Dataset(dsId,dsName)
+        datasets = datasets :+ Dataset(dsId, dsName)
       }
 
     } catch {
@@ -45,7 +48,7 @@ class DatasetDBController {
     datasets
   }
 
-  def read(id : String, from: Int = 1, to: Int = 10) = {
+  def read(id: Int, from: Int = 1, to: Int = 10) = {
 
     val name = getDatasetName(id)
     val ds = Dataset(id, name)
@@ -55,64 +58,30 @@ class DatasetDBController {
     (ds, data)
   }
 
-  def update(id: String, dataset: Dataset) = {
+  def update(id: Int, dataset: Dataset) = {
     delete(id)
     dataset.id = id
     add(dataset)
   }
 
-  def delete(id: String) = {
+  def delete(id: Int) = {
     Logger.info(s"DatasetDBController delete action (id:$id) ...")
     val name = getDatasetName(id)
-    println(name)
     dropTable(name)
   }
 
   // DB:
 
-  def initDB() = {
-    Logger.info(s"Initializing DB ...")
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    try{
-      stmt.execute("DROP TABLE DATASET;")
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    }
-
-    try{
-      stmt.execute("CREATE TABLE DATASET (ID VARCHAR(10) PRIMARY KEY , NAME VARCHAR(100) UNIQUE, SIZE INT)")
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    }finally {
-      conn.close()
-    }
-  }
-
-  def initDatasets(files : List[File]) = {
-
-    Logger.info(s"Initializing Datasets ...")
-
-    for(file <-files){
-      print(file)
-      val ds = createFromFile(file)
-      createDatasetTable(ds)
-      uploadData(ds)
-    }
-
-  }
 
   def dropTable(name: String) = {
 
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
 
-    try{
+    try {
       stmt.execute(s"DROP TABLE $name;")
       stmt.execute(s"DELETE FROM DATASET WHERE '$name' = NAME;")
-    }catch {
+    } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
     } finally {
       stmt.close()
@@ -121,15 +90,15 @@ class DatasetDBController {
 
   }
 
-  def renameTable(id: String, newName: String) = {
+  def renameTable(id: Int, newName: String) = {
 
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
-    val dsId = "%03d".format(id.toInt)
-    try{
-      val oldName = getDatasetName(dsId)
+
+    try {
+      val oldName = getDatasetName(id)
       stmt.execute(s"ALTER TABLE $oldName RENAME TO $newName;")
-      stmt.execute(s"UPDATE DATASET SET NAME = '$newName' WHERE ID = '$dsId'")
+      stmt.execute(s"UPDATE DATASET SET NAME = '$newName' WHERE DATASET_ID=$id")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
     } finally {
@@ -142,31 +111,25 @@ class DatasetDBController {
 
     Logger.info(s"Creating Dataset: $dataset ...")
 
-    var cols = "COLUMN_ID INT PRIMARY KEY, "
-    for(field <- dataset.fields){ cols += s"$field VARCHAR(255)," }
+    var cols = "COLUMN_ID SERIAL PRIMARY KEY, "
+    for (field <- dataset.fields) {
+      cols += s"$field VARCHAR,"
+    }
     cols = cols.dropRight(1)
-    val name = dataset.name
 
-    val conn = Databases.inMemory().getConnection()
+    val name = dataset.name
+    val size = dataset.data.length
+    val conn = db.getConnection()
     val stmt = conn.createStatement
 
-    try{
-      stmt.execute(s" DROP TABLE $name")
-    }catch {
-      case e: JdbcSQLException => Logger.error(e.getMessage)
-    }finally {
-      conn.close()
-    }
-
-    val conn_2 = Databases.inMemory().getConnection()
-    val stmt_2 = conn_2.createStatement
-
     try {
-      stmt_2.execute(s"CREATE TABLE $name ($cols);")
-    }
-    catch {
+      stmt.execute(s"DROP TABLE IF EXISTS $name")
+      stmt.execute(s"CREATE TABLE $name ($cols);")
+      stmt.execute(s"INSERT INTO DATASET (name, size) VALUES ('$name', $size);")
+
+    } catch {
       case e: JdbcSQLException => Logger.error(e.getMessage)
-    }finally {
+    } finally {
       conn.close()
     }
 
@@ -174,66 +137,32 @@ class DatasetDBController {
 
   def uploadData(dataset: Dataset) = {
 
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-    val id = dataset.id
-    val name = dataset.name
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    var cols = ""
+    for (field <- dataset.fields) {
+      cols += s"$field ,"
+    }
+    cols = cols.dropRight(1)
+    val dsName = dataset.name
+    val filePath = s"$currentDirectory/datasets/$dsName.csv"
+    val query = s"INSERT INTO $dsName ($cols) SELECT * FROM CSVREAD('$filePath', null, 'fieldSeparator='|| CHAR(9));"
 
-    var colNames = "COLUMN_ID, "
-    for (field <- dataset.fields){ colNames += field + ',' }
-    colNames = colNames.dropRight(1)
-    val size = dataset.data.length
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      stmt.execute(query);
+    }
+
+
+  }
+
+
+  def getDatasetName(id: Int): String = {
+
+    val conn = db.getConnection()
+    val stmt = conn.createStatement
+
     try {
-      stmt.execute(s"INSERT INTO DATASET (id, name, size) VALUES ('$id', '$name', $size);")
-      var count = 1
-      for (line <- dataset.data) {
-
-        var values = s"$count,"
-
-        for (v <- line.split("\t")) {
-          if (v != "") values += "\'" + v.replace("'", "''") + "\',"
-          else values += "\' \',"
-        }
-        values = values.dropRight(1)
-        stmt.execute(s"INSERT INTO $name ($colNames) VALUES ($values);")
-        count += 1;
-      }
-
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    } finally {
-      conn.close()
-      stmt.close()
-    }
-
-  }
-
-  def createFromFile(file: File) : Dataset = {
-
-    var rows : Array[String] = Array[String]()
-    val bufferedSource = Source.fromFile(file.getAbsolutePath)
-    for(line <- bufferedSource.getLines()){
-      rows = rows :+ line
-    }
-    val args = file.getName.split("-")
-    val id = args(0)
-    val name = args(1).replace(".csv","")
-    val fields = rows.apply(0).split("\t")
-    val data = rows.drop(1)
-
-    val ds = Dataset(id, name)
-    fields.map(field => ds.addField(field))
-    data.map(row => ds.addData(row))
-    ds
-  }
-
-  def getDatasetName(id: String): String = {
-
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    try{
-      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE ID='$id'")
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE DATASET_ID=$id")
       if (rs.next()) return rs.getString("NAME")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
@@ -245,13 +174,13 @@ class DatasetDBController {
     return ""
   }
 
-  def getDatasetSize(id: String): Int = {
+  def getDatasetSize(id: Int): Int = {
 
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
 
-    try{
-      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE ID='$id'")
+    try {
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE DATASET_ID=$id")
       if (rs.next()) return rs.getInt("SIZE")
     } catch {
       case e: JdbcSQLException => Logger.info(e.getMessage)
@@ -263,17 +192,17 @@ class DatasetDBController {
     return -1
   }
 
-  def getDataset(id: String): Dataset = {
+  def getDataset(id: Int): Dataset = {
 
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
 
-    try{
-      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE id='$id'")
+    try {
+      val rs = stmt.executeQuery(s"SELECT * FROM DATASET WHERE DATASET_ID=$id")
       while (rs.next()) {
         val name = rs.getString("name")
-        val id =rs.getString("id")
-        val ds = Dataset(id,name)
+        val id = rs.getInt("DATASET_ID")
+        val ds = Dataset(id, name)
         val fields = getDatasetFields(name)
         fields.map(field => ds.addField(field))
         return ds
@@ -289,16 +218,16 @@ class DatasetDBController {
     }
   }
 
-  def getDatasetFields(name: String): Array[String] ={
+  def getDatasetFields(name: String): Array[String] = {
 
     var headers = Array[String]()
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
 
     val dsName = name.toUpperCase
     try {
-      val rs = stmt.executeQuery(s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$dsName'" )
-      while (rs.next()){
+      val rs = stmt.executeQuery(s"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$dsName'")
+      while (rs.next()) {
         headers = headers :+ rs.getString("COLUMN_NAME")
       }
     } catch {
@@ -315,14 +244,14 @@ class DatasetDBController {
   def getDatasetContent(dataset: Dataset, from: Int = 1, to: Int = 10): Array[Array[String]] = {
 
     var rows = Array[Array[String]]()
-    val conn = Databases.inMemory().getConnection()
+    val conn = db.getConnection()
     val stmt = conn.createStatement
     val name = dataset.name
-    try{
+    try {
       val rs = stmt.executeQuery(s"SELECT * FROM $name WHERE $from <= COLUMN_ID AND COLUMN_ID <= $to")
-      while (rs.next()){
+      while (rs.next()) {
         var row = ""
-        for (field <- dataset.fields){
+        for (field <- dataset.fields) {
           row += rs.getString(field) + "\t"
         }
         rows = rows :+ row.split("\t")
@@ -334,7 +263,8 @@ class DatasetDBController {
       stmt.close()
     }
 
-    return  rows
+
+    return rows
   }
 
 

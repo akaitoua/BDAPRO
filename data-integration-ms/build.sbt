@@ -16,5 +16,5 @@ unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/
 
 libraryDependencies += "org.webjars" % "bootstrap" % "3.3.4"
 libraryDependencies += "com.h2database" % "h2" % "1.4.192"
-libraryDependencies += jdbc
+libraryDependencies += evolutions
       

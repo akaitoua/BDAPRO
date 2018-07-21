@@ -2,7 +2,7 @@
 @main("Integrations")(s"Integrating $dsOne with $dsTwo:") {
 
     <form method="post" action="@routes.IntegrationController.upload()" enctype="multipart/form-data">
-        <!-- Integration Algorithm Properties -->
+            <!-- Integration Algorithm Properties -->
         <div class="form-row">
             <div class="col">
                 <div class="input-group mb-3">
@@ -47,27 +47,29 @@
             </div>
         </div>
 
-        <!-- Datasets Field Selection -->
+            <!-- Datasets Field Selection -->
         <div class="form-row">
             <div class="col">
                 <h3><span class="badge badge-light">Dataset #1: @dsOne.displayName() </span></h3>
                 <input type="hidden" name="dsOneName" value="@dsOne.name">
-                @for(field <- dsOne.fields){
-                    <input type="checkbox" name="dsOneField" checked="checked" value="@field"> @field<br>
-                }
+                @for(field <- dsOne.fields) {
+                    <input type="checkbox" name="dsOneField" checked="checked" value="@field">
+                    @field <br>
+                    }
 
             </div>
 
             <div class="col">
                 <h3><span class="badge badge-light">Dataset #2: @dsTwo.displayName() </span></h3>
                 <input type="hidden" name="dsTwoName" value="@dsTwo.name">
-                @for(field <- dsTwo.fields){
-                    <input type="checkbox" name="dsTwoField" checked="checked" value="@field"> @field<br>
-                }
+                @for(field <- dsTwo.fields) {
+                    <input type="checkbox" name="dsTwoField" checked="checked" value="@field">
+                    @field <br>
+                    }
             </div>
         </div>
 
-        <!-- Buttons -->
+            <!-- Buttons -->
         <div class="form-row m-3">
             <div class="col">
                 <a href="@routes.IntegrationController.index()">

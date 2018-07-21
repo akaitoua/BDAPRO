@@ -3,7 +3,7 @@ package models
 import java.io.File
 
 
-case class Dataset(var id: String, var name: String) {
+case class Dataset(var id: Int, var name: String) {
 
   var fields = Array[String]()
   var data = Array[String]()
@@ -12,8 +12,8 @@ case class Dataset(var id: String, var name: String) {
     name.replace("_", " ")
   }
 
-  def formatId() = {
-    this.id = "%03d".format(id.toInt)
+  def strId() = {
+    "%03d".format(id.toInt)
   }
 
   def addField(field: String) = {
