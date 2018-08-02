@@ -1,32 +1,48 @@
 package controllers
 
-import org.h2.jdbc.JdbcSQLException
-import play.api.Logger
-import play.api.db.Databases
+import javax.inject.Inject
+import models.Integration
+import play.api.db.{Database}
 
-class IntegrationDBController {
+class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBController){
 
-  def initDB() = {
-    Logger.info(s"Initializing DB ...")
+  def add(integration: Integration) = {
+    println(integration)
+    val values = integration.getValues
+    val query = s"INSERT INTO INTEGRATION (INTEGRATION_NAME, DS_ONE_ID, DS_TWO_ID, BLOCKING_ALG, COMPARISON_ALG, SAME_DS_COMP, THRESHOLD) VALUES ($values);"
 
-    val conn = Databases.inMemory().getConnection()
-    val stmt = conn.createStatement
-
-    try {
-      stmt.execute("DROP TABLE INTEGRATIONS;")
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      stmt.execute(query);
     }
+  }
 
-    try {
-      stmt.execute("CREATE TABLE INTEGRATION (INTEGRATION_ID VARCHAR(10) PRIMARY KEY , " +
-        "DS_ONE VARCHAR(10), DS_TWO VARCHAR(10), BLOCKING_ALG VARCHAR(25), COMPARISON_ALG(25), " +
-        "SAME_DS_COMP Boolean, THRESHOLD FLOAT)")
-    } catch {
-      case e: JdbcSQLException => Logger.info(e.getMessage)
-    } finally {
-      conn.close()
+  def show : Array[Integration] =  {
+    var integrations = Array[Integration]()
+    val query = s"SELECT * FROM INTEGRATION;"
+
+    db.withConnection { conn =>
+      val rs = conn.createStatement().executeQuery(query);
+      while (rs.next()) {
+
+        val id = rs.getInt("INTEGRATION_ID")
+        val name = rs.getString("INTEGRATION_NAME")
+        val dsOneId = rs.getInt("DS_ONE_ID")
+        val dsTwoId = rs.getInt("DS_ONE_ID")
+        val block = rs.getString("BLOCKING_ALG")
+        val comp = rs.getString("COMPARISON_ALG")
+        val same = rs.getBoolean("SAME_DS_COMP")
+        val threshold = rs.getFloat("THRESHOLD")
+
+        val dsOne = dsDBController.getDataset(dsOneId)
+        val dsTwo = dsDBController.getDataset(dsTwoId)
+
+        integrations = integrations :+ Integration(id, name, dsOne, dsTwo, block, comp, same, threshold)
+
+      }
+
     }
+    integrations
   }
 
 }

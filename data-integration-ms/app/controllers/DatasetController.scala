@@ -166,6 +166,9 @@ class DatasetController @Inject()(cc: ControllerComponents, db: DatasetDBControl
 
   def integrate = Action(parse.multipartFormData) { request =>
     Logger.info("Calling integrations upload ...")
+
+    val name = request.body.asFormUrlEncoded("integration_name").map({ dsOneId => dsOneId.toString.trim }).head
+
     val dsOneId = request.body.asFormUrlEncoded("dsOneId").map({ dsOneId => dsOneId.toString.trim }).head
     val dsOneName = db.getDatasetName(dsOneId.toInt)
     val dsOneFields = db.getDatasetFields(dsOneName).filter(field => field != "COLUMN_ID")
@@ -178,7 +181,7 @@ class DatasetController @Inject()(cc: ControllerComponents, db: DatasetDBControl
     val dsTwo: Dataset = Dataset(dsTwoId.toInt, dsTwoName)
     dsTwoFields.map(field => dsTwo.addField(field))
 
-    Ok(views.html.integrate(dsOne, dsTwo))
+    Ok(views.html.integrate(name, dsOne, dsTwo))
   }
 
 }

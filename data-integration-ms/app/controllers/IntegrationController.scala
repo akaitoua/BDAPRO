@@ -8,12 +8,14 @@ import play.api.Logger
 import play.api.mvc._
 
 @Singleton
-class IntegrationController @Inject()(dsDB: DatasetDBController, cc: ControllerComponents) extends AbstractController(cc) {
+class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: IntegrationDBController,cc: ControllerComponents) extends AbstractController(cc) {
 
   def index = Action {
     Logger.info("Calling integrations index ...")
     val names = dsDB.show()
-    Ok(views.html.integrations(names))
+    val integrations = intDB.show
+    println(integrations)
+    Ok(views.html.integrations(names, integrations))
   }
 
   def read(id: Int, id_two: Int) = Action {
@@ -38,10 +40,12 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, cc: ControllerC
     val dsTwo: Dataset = Dataset(dsTwoId.toInt, dsTwoName)
     dsTwoFields.map(field => dsTwo.addField(field))
 
-    Ok(views.html.integrate(dsOne, dsTwo))
+    Ok(views.html.integrate("Some name",dsOne, dsTwo))
   }
 
   def upload = Action(parse.multipartFormData) { request =>
+
+    val name = request.body.asFormUrlEncoded("integration_name").head
 
     val blockingAlg = request.body.asFormUrlEncoded("blockingAlg").head
     val comparisonAlg = request.body.asFormUrlEncoded("comparisonAlg").head
@@ -49,13 +53,16 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, cc: ControllerC
     val threshold = request.body.asFormUrlEncoded("threshold").head.toFloat
 
     val dsOneName = request.body.asFormUrlEncoded("dsOneName").head.replace(" ", "_").toUpperCase
+    val dsOneId = request.body.asFormUrlEncoded("dsOneId").head.toInt
     val dsTwoName = request.body.asFormUrlEncoded("dsTwoName").head.replace(" ", "_").toUpperCase
-    val datasetOne = Dataset(-1, dsOneName)
+    val dsTwoId = request.body.asFormUrlEncoded("dsTwoId").head.toInt
+    val datasetOne = Dataset(dsOneId, dsOneName)
     request.body.asFormUrlEncoded("dsOneField").map({ field => datasetOne.addField(field) })
-    val datasetTwo = Dataset(-1, dsTwoName)
+    val datasetTwo = Dataset(dsTwoId, dsTwoName)
     request.body.asFormUrlEncoded("dsTwoField").map({ field => datasetTwo.addField(field) })
 
-    val integration = Integration(datasetOne, datasetTwo, blockingAlg, comparisonAlg, false, threshold)
+    val integration = Integration(-1, name,datasetOne, datasetTwo, blockingAlg, comparisonAlg, false, threshold)
+    intDB.add(integration)
     Redirect(routes.IntegrationController.index())
   }
 

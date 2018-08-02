@@ -1,9 +1,22 @@
-@(datasets: Array[Dataset])
-    @main("Integrations")("Select two datasets:") {
+@(datasets: Array[Dataset], integrations: Array[Integration])
+    @main("Integrations")("Make a new integration:") {
         <form method="post" action="@routes.DatasetController.integrate()" enctype="multipart/form-data">
 
-                <!-- Selection of the Dataset #1 -->
             <div class="form-row">
+                <div class="col">
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">Name</div>
+                            </div>
+                            <input type="text" class="form-control" id="integration_name" name="integration_name" placeholder="">
+                        </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+
+                    <!-- Selection of the Dataset #1 -->
+
                 <div class="col">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
@@ -17,10 +30,9 @@
                         </select>
                     </div>
                 </div>
-            </div>
 
-                <!-- Selection of Dataset #2 -->
-            <div class="form-row">
+                    <!-- Selection of Dataset #2 -->
+
                 <div class="col">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
@@ -45,4 +57,41 @@
             </div>
 
         </form>
+
+        <!-- List of integrations -->
+
+        <div class="container-fluid" id="dataset-container">
+            @if(!integrations.isEmpty) {
+                <h3>Integrations</h3>
+            }
+        <div class="list-group" id="dataset-list">
+        @for(integration <- integrations) {
+            <div class="list-group-item list-group-item-action flex-column align-items-start">
+                <div class="d-flex justify-content-between">
+                    <a href="">
+                        <div class="w-70">
+                            <h5 class="mb-1 w-50">@integration.name</h5>
+                            <small class="text-muted">id: @integration.id</small><br>
+                            <small class="text-muted">Algorithms: @integration.blocking / @integration.comparison</small><br>
+                            <small class="text-muted">Same DS: @integration.sameDSComparison</small>
+                            <small class="text-muted">Threshold: @integration.threshold</small>
+                        </div>
+                    </a>
+                    <div>
+                        <button class="btn btn-info" data-toggle="modal" data-target="">Update</button>
+                        <a href="">
+                            <button class="btn btn-info">Download</button>
+                        </a>
+                        <a href="">
+                            <button class="btn btn-danger">Delete</button>
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+
+
+        }
+        </div>
+        </div>
     }
