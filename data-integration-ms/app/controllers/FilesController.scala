@@ -7,6 +7,7 @@ import models.Dataset
 import play.api.Logger
 
 import scala.io.Source
+import scala.reflect.io.Path
 import scala.util.Try
 
 @Singleton
@@ -21,6 +22,9 @@ class FilesController {
     }
 
     val name = file.getName.replace(".csv", "")
+      .replace("_", " ")
+      .capitalize
+
     val fields = rows.apply(0).split("\t")
     val data = rows.drop(1)
 
@@ -79,6 +83,16 @@ class FilesController {
     } finally {
       pw.close
     }
+  }
+
+}
+
+object FilesController {
+
+  def deleteIntegration(name: String) = {
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    val path: Path = Path (s"$currentDirectory/integrations/$name/")
+    Try(path.deleteRecursively())
   }
 
 }

@@ -23,4 +23,6 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-text" % "1.4"
 )
 
-      
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.8.7"
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.8.7"
+dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.8.7"

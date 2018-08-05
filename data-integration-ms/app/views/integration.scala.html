@@ -1,0 +1,77 @@
+@(intId: Int, intName: String , headers: Array[String], rows: Array[Array[String]], selected: Int, numberOfPages: Int)
+@main(s"Integration: $intName")(s"ID: $intId") {
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+            @for(header <- headers) {
+                <th scope="col">@header</th>
+            }
+            </tr>
+        </thead>
+        <tbody>
+
+        @for(row <- rows) {
+            <tr>
+                @defining(row(0)) { similarityId =>
+                    <td>@similarityId</td>
+                }
+                @defining(row(1)) { dsOneRowId =>
+                    <td><a href="@routes.IntegrationController.topKL(intId, dsOneRowId.toInt)">@dsOneRowId</a></td>
+                }
+
+                @defining(row(2)) { dsTwoRowId =>
+                    <td><a href="@routes.IntegrationController.topKR(intId, dsTwoRowId.toInt)">@dsTwoRowId</a></td>
+                }
+
+                @defining(row(3)) { similarity =>
+                    <td>@similarity</td>
+                }
+
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <nav aria-label="...">
+        <div class="form-group row">
+
+            <ul class="pagination">
+                @if(selected == 1) {
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                } else {
+                    <li class="page-item">
+                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected - 1)" tabindex="-1">
+                            Previous</a>
+                    </li>
+                }
+
+                <form method="post" class="form-horizontal" action="@routes.IntegrationController.show_page_from_form()" enctype="multipart/form-data">
+                    <div class="form-group input-group">
+                        <input type="hidden" name="pageId" value="@intId" />
+                        <input required type="number" size="10" name="pageNumb" placeholder=" @selected of @numberOfPages ">
+                        <span class="input-group-btn"><button class="btn btn-primary rounded-0">Go!</button></span>
+                    </div>
+                </form>
+
+
+                @if(selected == numberOfPages) {
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+
+                } else {
+                    <li class="page-item">
+                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected + 1)">Next</a>
+                    </li>
+                }
+
+            </ul>
+
+        </div>
+
+    </nav>
+
+}

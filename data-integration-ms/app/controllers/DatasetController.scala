@@ -106,7 +106,7 @@ class DatasetController @Inject()(cc: ControllerComponents, db: DatasetDBControl
 
     request.body.file("dataset").map { dataset =>
 
-      val fileName = dataset.filename
+      val fileName = dataset.filename.toLowerCase
       Logger.info(s"Uploading file: $fileName")
 
       dataset.ref.moveTo(Paths.get(s"/$currentDirectory/datasets/$name.csv"), replace = true)
@@ -148,7 +148,6 @@ class DatasetController @Inject()(cc: ControllerComponents, db: DatasetDBControl
     val ds: Dataset = t._1
     val rows = t._2
     val length = db.getDatasetSize(id)
-    println(s"!!!!$length")
 
     val pages = if (length % 10 == 0) (length / 10) else ((length / 10) + 1)
     Ok(views.html.dataset(id, ds.displayName(), ds.fields, rows, pagNumb, pages))

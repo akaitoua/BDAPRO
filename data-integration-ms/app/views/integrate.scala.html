@@ -1,5 +1,5 @@
 @(name: String, dsOne: Dataset, dsTwo: Dataset)
-@main("Integrations")(s"<strong>$name:</strong> Integrating $dsOne with $dsTwo") {
+@main("Integrations")(s"$name:Integrating $dsOne with $dsTwo") {
 
     <form method="post" action="@routes.IntegrationController.upload()" enctype="multipart/form-data">
         <input type="hidden" name="integration_name" value="@name">
@@ -10,10 +10,10 @@
                     <div class="input-group-prepend">
                         <label class="input-group-text" for="inputGroupSelect01">Blocking Algorithm:</label>
                     </div>
-                    <select class="custom-select" name="blockingAlg" id="inputGroupSelect01">
-                        <option selected>-- Select a Algorithm --</option>
-                        <option>Sound Base</option>
-                        <option>Sorted Neighbour</option>
+                    <select class="custom-select" name="blockingAlg" id="inputGroupSelect01" required>
+                        <option disabled selected value="">-- Select a Algorithm --</option>
+                        <option value="Sounds Base">Sound Base</option>
+                        <option value="Sorted Neighbour">Sorted Neighbour</option>
                     </select>
                 </div>
             </div>

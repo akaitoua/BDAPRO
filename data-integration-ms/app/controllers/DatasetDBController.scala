@@ -117,7 +117,7 @@ class DatasetDBController @Inject()(db: Database) {
     }
     cols = cols.dropRight(1)
 
-    val name = dataset.name
+    val name = dataset.name.replace(" ", "_")
     val size = dataset.data.length
     val conn = db.getConnection()
     val stmt = conn.createStatement
@@ -143,7 +143,7 @@ class DatasetDBController @Inject()(db: Database) {
       cols += s"$field ,"
     }
     cols = cols.dropRight(1)
-    val dsName = dataset.name
+    val dsName = dataset.name.replace(" ", "_").toLowerCase
     val filePath = s"$currentDirectory/datasets/$dsName.csv"
     val query = s"INSERT INTO $dsName ($cols) SELECT * FROM CSVREAD('$filePath', null, 'fieldSeparator='|| CHAR(9));"
 
