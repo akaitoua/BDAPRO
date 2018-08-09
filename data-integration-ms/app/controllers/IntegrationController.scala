@@ -26,7 +26,8 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
 
   def show_page(id: Int, pageNumb: Int) = Action {
     val headers = Array("SIMILARITY_ID","ROW_DS_ONE_ID", "ROW_DS_TWO_ID", "SIMILARITY")
-    val content = intDB.getIntegrationContent(id, (pageNumb - 1) *10)
+    val threshold = intDB.getThreshold(id);
+    val content = intDB.getIntegrationContent(id, threshold,(pageNumb - 1) *10)
     val length = intDB.getLength(id)
     val pages = if (length % 10 == 0) (length / 10) else ((length / 10) + 1)
     Ok(views.html.integration(id, "Demo",headers, content, pageNumb,pages))
@@ -69,7 +70,6 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
 
     val blockingAlg = request.body.asFormUrlEncoded("blockingAlg").head
     val comparisonAlg = request.body.asFormUrlEncoded("comparisonAlg").head
-    val sameDSComp = request.body.asFormUrlEncoded("sameDSComp").head
     val threshold = request.body.asFormUrlEncoded("threshold").head.toFloat
 
     val dsOneName = request.body.asFormUrlEncoded("dsOneName").head.replace(" ", "_")

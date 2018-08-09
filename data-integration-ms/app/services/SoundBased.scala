@@ -1,6 +1,5 @@
 package services
 
-import models.EntityMatch
 import org.apache.commons.codec.language._
 import org.apache.commons.text.similarity.JaccardDistance
 import org.apache.spark.SparkConf

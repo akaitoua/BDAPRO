@@ -107,13 +107,13 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
 
   }
 
-  def getIntegrationContent(id: Int, offset: Int = 0, limit: Int = 10): Array[Array[String]] = {
+  def getIntegrationContent(id: Int, threshold: Float,offset: Int = 0, limit: Int = 10): Array[Array[String]] = {
 
     var rows = Array[Array[String]]()
     val conn = db.getConnection()
     val stmt = conn.createStatement
     try {
-      val rs = stmt.executeQuery(s"SELECT * FROM SIMILARITY WHERE INTEGRATION_ID = $id OFFSET $offset LIMIT $limit")
+      val rs = stmt.executeQuery(s"SELECT * FROM SIMILARITY WHERE INTEGRATION_ID = $id  AND SIMILARITY >= $threshold OFFSET $offset LIMIT $limit")
       while (rs.next()) {
         var row = ""
         for (field <- Array("SIMILARITY_ID", "ROW_DS_ONE_ID", "ROW_DS_TWO_ID", "SIMILARITY")) {
@@ -179,6 +179,19 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
     }
 
     return rows
+  }
+
+  def getThreshold(id: Int) : Float = {
+
+    val query = s"SELECT THRESHOLD FROM INTEGRATION WHERE INTEGRATION_ID = $id; "
+
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      val res = stmt.executeQuery(query);
+      if(res.next()) res.getFloat("THRESHOLD")
+      else -1
+    }
+
   }
 
 

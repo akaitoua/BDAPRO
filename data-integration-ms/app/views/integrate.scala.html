@@ -14,6 +14,7 @@
                         <option disabled selected value="">-- Select a Algorithm --</option>
                         <option value="Sounds Base">Sound Base</option>
                         <option value="Sorted Neighbour">Sorted Neighbour</option>
+                        <option value="Permutation Base">Permutation Base</option>
                     </select>
                 </div>
             </div>
@@ -23,33 +24,21 @@
                         <label class="input-group-text" for="inputGroupSelect01">Comparison Algorithm:</label>
                     </div>
                     <select class="custom-select" name="comparisonAlg" id="inputGroupSelect01">
-                        <option selected>-- Select a Algorithm --</option>
+                        <option disabled selected value="">-- Select a Algorithm --</option>
+                        <option value="Jaccard">Jaccard</option>
                     </select>
                 </div>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="col">
-                <div class="input-group mb-3">
-                    <div class="input-group-prepend">
-                        <label class="input-group-text" for="inputGroupSelect01">Same DS Comparison:</label>
-                    </div>
-                    <select class="custom-select" name="sameDSComp" id="inputGroupSelect01">
-                        <option selected>No</option>
-                        <option>Yes</option>
-                    </select>
-                </div>
-            </div>
+
             <div class="col">
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <label class="input-group-text" for="inputGroupSelect01">Threshold:</label>
                     </div>
-                    <input type="number" name="threshold" min="0" max="1" step="0.01" id="threshold" required/>
+                    <input type="number" name="threshold" min="0" max="1" step="0.01" id="threshold" value ="0.5" required/>
                 </div>
             </div>
         </div>
-
             <!-- Datasets Field Selection -->
         <div class="form-row">
             <div class="col">
