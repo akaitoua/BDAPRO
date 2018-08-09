@@ -20,56 +20,19 @@ public class LookupGenerator {
 
         String rootPath = "/mnt/work/code-base/IntegrationMicroService/";
         String output= "/home/venkat/Desktop/symspell.txt";
-        String input1 = rootPath + "company_entities.csv";
-        String input2 = rootPath + "company_profiles.csv";
+        String input2 = rootPath + "company_entities.csv";
+        String input1 = rootPath + "company_profiles.csv";
 
         // build permutations hash for the smaller dataset
-        Multimap<String, String> perms = buildHash(input2);
+        Multimap<String, String> perms = buildHash(input1);
 
         Formatter fs= new Formatter(output);
 
         // TODO: read line by line from the second dataset
         String line;
-        BufferedReader br = new BufferedReader(new FileReader(new File(input1)));
+        BufferedReader br = new BufferedReader(new FileReader(new File(input2)));
         while ((line = br.readLine()) != null) {
             getProbableMatches(line,perms);
-//            // store all duplicates resulted from the permutations with the word as key
-//            Multimap<String, String> duplicatePerWord = HashMultimap.create();
-//            String[] lineWords = line.split("\\t");
-//            String rowId = lineWords[0];
-//            // parse name column and split the column into words and then generate permuations per word
-//            String[] words = lineWords[1].toLowerCase().split("\\s+");
-//            for (String word : words) {
-//                Set<String> permsdup = buildPermutations(word, false).keySet();
-//
-//                for (String s : permsdup) {
-//                    if (perms.get(s).size() >= 1) {
-//                        duplicatePerWord.putAll(word, perms.get(s));
-//                        // System.out.println("word:"+ word + "  perm: "+ s +"  listIds: "+perms.get(s));
-//                    }
-//                }
-//            }
-//
-//            Collection<String> absDuplicates = null;
-//
-//            // retain duplicates occured based on common occurance in all words
-//            // TODO: permutations if word not occured in all the parts
-//            for (String word : words) {
-//                if (absDuplicates == null) {
-//                    absDuplicates = duplicatePerWord.get(word);
-//                } else {
-//                    absDuplicates.retainAll(duplicatePerWord.get(word));
-//                }
-//            }
-//
-//            Iterator<String> it = absDuplicates.iterator();
-//            if (absDuplicates.size()>0) {
-//                fs.format("cat company_entities.csv | grep '%s'\n", rowId);
-//            }
-//            while (it.hasNext()) {
-////            System.out.println(rowId+" "+it.next());
-//                fs.format("cat company_profiles.csv | grep '%s'\n",it.next());
-//            }
         }
         System.out.println("DONE");
     }
