@@ -198,7 +198,7 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
 
     val fieldsStr = fields.mkString(",")
 
-    val query = s"CALL CSVWRITE('data/$name.tsv', 'SELECT COLUMN_ID, $fieldsStr FROM $name', 'charset=UTF-8 fieldSeparator=' || CHAR(9));"
+    val query = s"CALL CSVWRITE('data/$name.tsv', 'SELECT COLUMN_ID, $fieldsStr FROM $name', 'charset=UTF-8 fieldDelimiter= fieldSeparator=' || CHAR(9));"
 
     db.withConnection { conn =>
       val stmt = conn.createStatement()

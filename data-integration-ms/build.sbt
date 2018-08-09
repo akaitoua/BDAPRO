@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % "2.3.0",
   "org.apache.spark" %% "spark-mllib" % "2.2.0",
   "com.databricks" % "spark-csv_2.11" % "1.5.0",
-  "org.apache.commons" % "commons-text" % "1.4"
+  "org.apache.commons" % "commons-text" % "1.4",
+  "com.google.guava" % "guava" % "23.0"
 )
 
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.8.7"
