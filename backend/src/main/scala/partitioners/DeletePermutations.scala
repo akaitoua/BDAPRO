@@ -57,8 +57,6 @@ class DeletePermutations extends Serializable {
     val joined = dfB.join(flattedDups)
 
     val actualDups = joined.mapValues(x=>{val ds1=x._1.split("\\t"); val ds2=x._2.split("\\t");produceSimilarity(ds1,ds2,threshold)})
-    print(actualDups.count())
-    actualDups.take(5).foreach(println)
-    actualDups.saveAsTextFile(output)
+    actualDups.map(x=>Array(x._2.id1,x._2.id1,x._2.similarity).mkString(",")).saveAsTextFile(output)
   }
 }
