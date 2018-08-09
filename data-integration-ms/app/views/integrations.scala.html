@@ -73,15 +73,10 @@
                             <h5 class="mb-1 w-50">@integration.name</h5>
                             <small class="text-muted">id: @integration.id</small><br>
                             <small class="text-muted">Algorithms: @integration.blocking / @integration.comparison</small><br>
-                            <small class="text-muted">Same DS: @integration.sameDSComparison</small>
                             <small class="text-muted">Threshold: @integration.threshold</small>
                         </div>
                     </a>
                     <div>
-                        <button class="btn btn-info" data-toggle="modal" data-target="">Update</button>
-                        <a href="">
-                            <button class="btn btn-info">Download</button>
-                        </a>
                         <a href="@routes.IntegrationController.delete(integration.id)">
                             <button class="btn btn-danger">Delete</button>
                         </a>

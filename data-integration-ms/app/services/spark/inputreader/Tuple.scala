@@ -1,4 +1,4 @@
-package models
+package services.spark.inputreader
 
 class Tuple(field:Array[String]) extends Serializable{
   var fields:Array[String]=field

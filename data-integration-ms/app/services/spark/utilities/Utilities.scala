@@ -1,6 +1,9 @@
-package services
+package services.spark.utilities
+
+import java.io.File
 
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import services.spark.inputreader.CSVReader
 
 class Utilities extends Serializable {
 
@@ -22,5 +25,12 @@ class Utilities extends Serializable {
 }
 
 object Utilities {
+  def deleteRecursively(file: File):Unit={
+    //    val file:File= new File(fileName);
+    if (file.isDirectory)
+      file.listFiles.foreach(deleteRecursively)
+    if (file.exists && !file.delete)
+      throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
+  }
 
 }

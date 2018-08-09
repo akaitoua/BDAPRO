@@ -1,7 +1,7 @@
-package services
-
+package services.spark.inputreader
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
+
 class CSVReader(spark:SparkSession) {
   def readData(input:String,delimiter:String): DataFrame =spark.read.format("csv")
     .option("header","true").option("inferSchema","true").option("delimiter",delimiter).load(input)

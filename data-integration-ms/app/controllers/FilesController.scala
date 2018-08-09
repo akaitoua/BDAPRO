@@ -91,8 +91,15 @@ object FilesController {
 
   def deleteIntegration(name: String) = {
     val currentDirectory = new java.io.File(".").getCanonicalPath
-    val path: Path = Path (s"$currentDirectory/integrations/$name/")
+    val path: Path = Path(s"$currentDirectory/integrations/$name/")
     Try(path.deleteRecursively())
+  }
+
+  def getListOfSparkFiles(intName: String): List[File] = {
+    val currentDirectory = new java.io.File(".").getCanonicalPath
+    val dir = new File(s"/$currentDirectory/integrations/$intName/")
+
+    dir.listFiles.filter(_.isFile).toList.filter { file => ((!(file.getName contains '.') && !file.getName.startsWith("_"))) }
   }
 
 }

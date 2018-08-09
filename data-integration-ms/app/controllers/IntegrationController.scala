@@ -1,17 +1,13 @@
 package controllers
 
 import java.io.File
-import java.nio.file.Paths
 
 import javax.inject._
 import models.{Dataset, Integration}
 import play.api.Logger
 import play.api.mvc._
-import services.SoundBased
-
+import services.spark.entity_matchers.EntityMatch
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.reflect.io.Path
-import scala.util.Try
 
 @Singleton
 class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: IntegrationDBController,cc: ControllerComponents) extends AbstractController(cc) {
@@ -72,9 +68,9 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
     val comparisonAlg = request.body.asFormUrlEncoded("comparisonAlg").head
     val threshold = request.body.asFormUrlEncoded("threshold").head.toFloat
 
-    val dsOneName = request.body.asFormUrlEncoded("dsOneName").head.replace(" ", "_")
+    val dsOneName = request.body.asFormUrlEncoded("dsOneName").head.replace(" ", "_").toLowerCase
     val dsOneId = request.body.asFormUrlEncoded("dsOneId").head.toInt
-    val dsTwoName = request.body.asFormUrlEncoded("dsTwoName").head.replace(" ", "_")
+    val dsTwoName = request.body.asFormUrlEncoded("dsTwoName").head.replace(" ", "_").toLowerCase
     val dsTwoId = request.body.asFormUrlEncoded("dsTwoId").head.toInt
     val datasetOne = Dataset(dsOneId, dsOneName)
     request.body.asFormUrlEncoded("dsOneField").map({ field => datasetOne.addField(field) })
@@ -85,19 +81,27 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
     intDB.add(integration)
 
     val currentDirectory = new java.io.File(".").getCanonicalPath
-    val dsOne = s"$currentDirectory/datasets/$dsOneName.csv"
-    println(dsOne)
-    val dsTwo = s"$currentDirectory/datasets/$dsTwoName.csv"
-    println(dsTwo)
+
     val output = s"$currentDirectory/integrations/$name"
-    val identityCol = Array("company_name","country")
+    val identityCol = datasetOne.fields
 
     val integrationId = intDB.getIdByName(name)
 
-    val soundBased:SoundBased = new SoundBased
+
     scala.concurrent.Future{
-      soundBased.matchEntities(dsOne,dsTwo,output,identityCol,0.5)
-      intDB.addSimilarity(integrationId, new File(s"$output/part-00000"))
+      intDB.generateDatasetFile(datasetOne.name.toLowerCase, datasetOne.fields)
+      intDB.generateDatasetFile(datasetTwo.name.toLowerCase, datasetTwo.fields)
+
+      val dsOne = s"$currentDirectory/data/$dsOneName.tsv"
+      println(dsOne)
+      val dsTwo = s"$currentDirectory/data/$dsTwoName.tsv"
+      println(dsTwo)
+
+      EntityMatch.findDuplicates(dsOne,dsTwo,output,identityCol,blockingAlg,comparisonAlg,threshold)
+      FilesController.getListOfSparkFiles(name).foreach( file => {
+        intDB.addSimilarity(integrationId, file)
+      })
+
     }
 
     Redirect(routes.IntegrationController.index())

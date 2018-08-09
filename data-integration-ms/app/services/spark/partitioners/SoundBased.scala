@@ -1,10 +1,12 @@
-package services
+package services.spark.partitioners
 
 import org.apache.commons.codec.language._
 import org.apache.commons.text.similarity.JaccardDistance
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.functions.{col, concat_ws, lit, udf}
 import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
+import services.spark.entity_matchers.EntityMatch
+import services.spark.utilities.Utilities
 
 import scala.tools.nsc.transform.patmat.Lit
 class SoundBased extends Serializable {
@@ -31,7 +33,7 @@ class SoundBased extends Serializable {
     for (i <- 1 to dataColsLen ) {
       sim +=  (if(row1(i)!="null" && row2(i) != "null")1 - jd.apply(row1(i), row2(i)) else { decSim();0; })
     }
-    EntityMatch(row1(0),row2(0),row1(1),row2(1),sim/simNormal)
+    EntityMatch(row1(0),row2(0),sim/simNormal)
   }
 
   val generateJoinSoundCode = udf((x: String) => {
@@ -41,7 +43,7 @@ class SoundBased extends Serializable {
 
   def matchEntities(input1:String,input2:String,output:String,idcols:Array[String],threshold:Double): Unit ={
     val keyGenCols = concat_ws("",idcols.map(x=> col(x)):_*)
-    println("Start!")
+
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
     conf.setMaster("local")
@@ -50,31 +52,19 @@ class SoundBased extends Serializable {
     var utilities: Utilities = new Utilities();
     // Partitioner
     val partitioner = new SoundBased()
+
+
     val inputs=utilities.readInputAsDataFrame(input1,input2,spark)
-    println("Partitions created!")
 
     val soundKeyAddedDF = partitioner.createPartition(inputs(0).withColumn("datasetid", lit(1)),inputs(1).withColumn("datasetid", lit(2)),keyGenCols)
-    println("Partitions created!")
     val keyedA = soundKeyAddedDF(0).map((row:Row) => (row.getString(row.length-1),utilities.rowConvert(row,row.length))).rdd
     val keyedB = soundKeyAddedDF(1).map((row:Row) => (row.getString(row.length-1),utilities.rowConvert(row,row.length))).rdd
-    println("Keys created!")
+
     val joined = keyedA.join(keyedB)
-    println("Joined!")
+
     val simCalculated= joined.mapValues(x=>partitioner.produceSimilarity(x._2,x._1,threshold)).map(x=>(Array(x._2.id1,x._2.id2,x._2.similarity.toString).mkString(",")));
-    println("Sim calculated!")
+
     simCalculated.saveAsTextFile(output)
-    println("Finished!")
     spark.stop()
   }
-
-
-  //  def matchEntities(): DataFrame ={
-  //    val keyedA = soundKeyAddedDF(0).map((row:Row) => (row.getString(row.length-2),utilities.rowConvert(row,row.length))).rdd
-  //    val keyedB = soundKeyAddedDF(1).map((row:Row) => (row.getString(row.length-2),utilities.rowConvert(row,row.length))).rdd
-  //
-  //    val joined = keyedA.join(keyedB)
-  //
-  //    val simCalculated= joined.mapValues(x=>partitioner.produceSimilarity(x._2,x._1)).map(x=>(Array(x._2.id1,x._2.id2,x._2.similarity.toString).mkString(",")));
-  //  }
-
 }
