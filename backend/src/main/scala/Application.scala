@@ -1,5 +1,6 @@
 import java.nio.file.{Files, Paths}
 
+import EntityMatchers.MatchEntities
 import inputreader.CSVReader
 import org.apache.commons.text.similarity.JaccardDistance
 import org.apache.spark.SparkConf
@@ -18,7 +19,6 @@ object Application extends App {
     val input2 = rootPath + "company_profiles.csv"
     val identityCol = Array("company_name","country")
 
-    val soundBased:SoundBased = new SoundBased
-    soundBased.matchEntities(input1,input2,output,identityCol,0.5)
+    MatchEntities.findDuplicates(input1,input2,output,identityCol,"sortedneighborhood","jaccard",0.5)
   }
 }

@@ -33,7 +33,7 @@ class SoundBased extends Serializable {
     for (i <- 1 to dataColsLen ) {
       sim +=  (if(row1(i)!="null" && row2(i) != "null")1 - jd.apply(row1(i), row2(i)) else { decSim();0; })
     }
-    EntityMatch(row1(0),row2(0),row1(1),row2(1),sim/simNormal)
+    EntityMatch(row1(0),row2(0),sim/simNormal)
   }
 
   val generateJoinSoundCode = udf((x: String) => {
@@ -67,15 +67,4 @@ class SoundBased extends Serializable {
     simCalculated.saveAsTextFile(output)
     spark.stop()
   }
-
-
-//  def matchEntities(): DataFrame ={
-//    val keyedA = soundKeyAddedDF(0).map((row:Row) => (row.getString(row.length-2),utilities.rowConvert(row,row.length))).rdd
-//    val keyedB = soundKeyAddedDF(1).map((row:Row) => (row.getString(row.length-2),utilities.rowConvert(row,row.length))).rdd
-//
-//    val joined = keyedA.join(keyedB)
-//
-//    val simCalculated= joined.mapValues(x=>partitioner.produceSimilarity(x._2,x._1)).map(x=>(Array(x._2.id1,x._2.id2,x._2.similarity.toString).mkString(",")));
-//  }
-
 }
