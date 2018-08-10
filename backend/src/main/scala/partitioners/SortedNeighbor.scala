@@ -8,6 +8,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.rdd.RDDFunctions._
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions.{col, concat_ws, lit}
+import utilities.Utilities
 
 class SortedNeighbor (windowSize:Int = 4) extends Serializable {
 
@@ -36,7 +37,7 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
 
 
 
-  def matchEntities(input1:String,input2:String,output:String,idcols:Array[String],threshold:Double)={
+  def matchEntities(input1:String,input2:String,output:String,idcols:Array[String],compAlg:String,threshold:Double)={
     val idCols=concat_ws("",idcols.map(x=> col(x)):_*)
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
@@ -73,7 +74,7 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
     case class EntityMatch(id1:String,id2:String,name1:String,name2:String,similarity:Double)
 
     def produceSimilarity(row1:Array[String],row2:Array[String]):Option[EntityMatch]={
-      lazy val jd = new JaccardDistance()
+      lazy val jd =  Utilities.getDistanceMeasure(compAlg)
       var sim=0.0;
       val dataColsLen= row1.length-1-1; // specific to Soundex Partitioner; -1 to avoid index out of bounds, -2 as we added dataset id, partition code
 

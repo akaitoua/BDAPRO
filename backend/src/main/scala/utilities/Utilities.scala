@@ -3,8 +3,8 @@ package utilities
 import java.io.File
 
 import inputreader.CSVReader
+import org.apache.commons.text.similarity._
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-
 class Utilities extends Serializable {
 
   def rowConvert(x:Row,len:Int):Array[String] = {
@@ -33,4 +33,13 @@ object Utilities {
       throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
   }
 
+  def getDistanceMeasure(alg:String):SimilarityScore[java.lang.Double] = {
+    if (alg.equalsIgnoreCase("jaro-winkler")){
+      new JaroWinklerDistance()
+    }
+    if(alg.equalsIgnoreCase("levenshtein")){
+      new LevenshteinDistance()
+    }
+    new JaccardDistance;
+  }
 }
