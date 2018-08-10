@@ -2,6 +2,11 @@ import com.google.inject.AbstractModule
 import java.time.Clock
 
 import services.{ApplicationTimer, AtomicCounter, Counter}
+import controllers.H2Controller
+import javax.inject.Inject
+import org.h2.jdbc.JdbcSQLException
+import play.api.Logger
+import play.api.db.Databases
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -23,6 +28,12 @@ class Module extends AbstractModule {
     bind(classOf[ApplicationTimer]).asEagerSingleton()
     // Set AtomicCounter as the implementation for Counter.
     bind(classOf[Counter]).to(classOf[AtomicCounter])
+    //Init h2 DB
+    val h2 = new H2Controller()
+    h2.initDB()
+    h2.initDatasets()
   }
+
+
 
 }

@@ -4,9 +4,27 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index
+GET     /                                   controllers.HomeController.index
+
+#Dataset
+GET     /api/datasets                       controllers.DatasetController.index
+GET     /api/dataset/:id                    controllers.DatasetController.read(id: String)
+POST    /api/dataset                        controllers.DatasetController.upload
+POST    /api/dataset/update:id              controllers.DatasetController.update(id: String)
+GET     /api/dataset/delete/:id             controllers.DatasetController.delete(id: String)
+GET     /api/dataset/show/:id               controllers.DatasetController.show(id: String)
+GET     /api/dataset/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
+
+#Integrations
+GET     /api/integrations               controllers.IntegrationController.index
+GET     /api/integration/:id            controllers.IntegrationController.read(id: String)
+POST    /api/integration                controllers.IntegrationController.upload
+PUT     /api/integration                controllers.IntegrationController.update(id: String)
+DELETE  /api/integration/:id            controllers.IntegrationController.delete(id: String)
+
 # An example controller showing how to use dependency injection
 GET     /count                      controllers.CountController.count
+
 # An example controller showing how to write asynchronous code
 GET     /message                    controllers.AsyncController.message
 

@@ -1,0 +1,62 @@
+@(dsId: String, dsName: String, headers:Array[String], rows : Array[Array[String]], selected: Int, pages: Array[Int])
+@main(s"Dataset: $dsName")(s"ID: $dsId"){
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                @for(header <-headers){
+                    <th scope="col">@header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+
+            @for(row <- rows){
+                <tr>
+                    @for(data <- row){
+                        <td>@data</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="...">
+        <ul class="pagination">
+            @if(selected == 1){
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                </li>
+            } else {
+                <li class="page-item">
+                    <a class="page-link" href="@routes.DatasetController.show_page(dsId, selected - 1)" tabindex="-1">Previous</a>
+                </li>
+            }
+
+            @for(page <- pages){
+                @if(page == selected){
+                    <li class="page-item active">
+                        <span class="page-link">
+                            @page
+                            <span class="sr-only">(current)</span>
+                        </span>
+                    </li>
+                }else{
+                    <li class="page-item"><a class="page-link" href="@routes.DatasetController.show_page(dsId, page)">@page</a></li>
+                }
+            }
+
+            @if(selected == pages.length){
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+
+            } else {
+                <li class="page-item">
+                    <a class="page-link" href="@routes.DatasetController.show_page(dsId, selected + 1)">Next</a>
+                </li>
+            }
+
+        </ul>
+    </nav>
+
+}
