@@ -11,7 +11,11 @@ import services.spark.utilities.{LookupGenerator, Utilities}
 import scala.collection.JavaConversions._
 
 class DeletePermutations extends Serializable {
-  def produceSimilarity(row1: Array[String], row2: Array[String], compAlg: String, threshold: Double): EntityMatch = {
+  def produceSimilarity(row1: Array[String], row2: Array[String], compAlg: String, threshold: Double): Option[EntityMatch] = {
+    if (row1.length != row2.length || row1.length==0 || row2.length==0){
+      None
+    }else{
+
     lazy val dm = Utilities.getDistanceMeasure(compAlg)
     var sim = 0.0;
     val dataColsLen = row1.length - 1;
@@ -30,8 +34,8 @@ class DeletePermutations extends Serializable {
         0;
       })
     }
-    EntityMatch(row1(0), row2(0), sim / simNormal)
-    //    }
+    Some(EntityMatch(row1(0), row2(0), sim / simNormal))
+    }
   }
 
 
@@ -65,6 +69,6 @@ class DeletePermutations extends Serializable {
     val actualDups = joined.mapValues(x => {
       val ds1 = x._1.split("\\t"); val ds2 = x._2.split("\\t"); produceSimilarity(ds1, ds2, compAlg, threshold)
     })
-    actualDups.map(x => Array(x._2.id1, x._2.id1, x._2.similarity).mkString(",")).saveAsTextFile(output)
+    actualDups.filter(x => x._2.isDefined).map(x => Array(x._2.get.id1, x._2.get.id2, x._2.get.similarity).mkString(",")).saveAsTextFile(output)
   }
 }

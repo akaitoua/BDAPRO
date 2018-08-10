@@ -9,7 +9,7 @@ object Application extends App {
     val output = "/mnt/work/DI/output"
     //    val rootPath = "/mnt/work/code-base/IntegrationMicroService/"
     val rootPath = "/home/venkat/Downloads/"
-    val input1 = rootPath + "company_entities.csv"
+    val input1 = rootPath + "company_entities.tsv"
     val input2 = rootPath + "test.csv"
     val identityCol = Array("company_name", "country")
 
@@ -17,6 +17,6 @@ object Application extends App {
     // partioners - soundex, sortedneighborhood, permutations
     // distances Jacccard, Jaro-winkler, Levenshtein
     // all name ares NOT case sensitive
-    EntityMatch.findDuplicates(input1, input2, output, identityCol, "soundex", "levenshtein", 0.5)
+    EntityMatch.findDuplicates(input1, input2, output, identityCol, "permutations", "levenshtein", 0.5)
   }
 }
