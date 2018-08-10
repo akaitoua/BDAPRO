@@ -62,11 +62,17 @@ public class LookupGenerator {
         String[] lineWords = line.split("\\t");
         String rowId = lineWords[0];
         // parse name column and split the column into words and then generate permuations per word
-        String[] words = lineWords[1].toLowerCase().split("\\s+");
+        String[] words = lineWords[2].toLowerCase().split("\\s+");
         for (String word : words) {
-            Set<String> permsdup = buildPermutations(word, false).keySet();
+            Map<String,String> permsdup = buildPermutations(word, false);
+            Set<String> permsKeyset = null;
+            if (permsdup!=null){
+                permsKeyset=permsdup.keySet();
+            }else {
+                continue;
+            }
 
-            for (String s : permsdup) {
+            for (String s : permsKeyset) {
                 if (perms.get(s).size() >= 1) {
                     duplicatePerWord.putAll(word, perms.get(s));
                     // System.out.println("word:"+ word + "  perm: "+ s +"  listIds: "+perms.get(s));
@@ -112,7 +118,7 @@ public class LookupGenerator {
         if (lineNumberPresent) {
             String[] inputSplit = in.split("\\t+");
             rowId = inputSplit[0];
-            splitName = inputSplit[1].split("\\s+");
+            splitName = inputSplit[2].split("\\s+");
             inputSplit = null;
         }else {
             splitName = in.split("\\s+");
