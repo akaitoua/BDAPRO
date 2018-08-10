@@ -4,29 +4,32 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                                   controllers.HomeController.index
+GET     /                                controllers.DatasetController.index
 
 #Dataset
-GET     /api/datasets                       controllers.DatasetController.index
-GET     /api/dataset/:id                    controllers.DatasetController.read(id: String)
-POST    /api/dataset                        controllers.DatasetController.upload
-POST    /api/dataset/update:id              controllers.DatasetController.update(id: String)
-GET     /api/dataset/delete/:id             controllers.DatasetController.delete(id: String)
-GET     /api/dataset/show/:id               controllers.DatasetController.show(id: String)
-GET     /api/dataset/show/:id/page/:numb    controllers.DatasetController.show_page(id: String, numb: Int)
+GET     /datasets                        controllers.DatasetController.index
+GET     /datasets/:id                    controllers.DatasetController.download(id: Int)
+POST    /datasets                        controllers.DatasetController.upload
+POST    /datasets/update:id              controllers.DatasetController.update(id: Int)
+GET     /datasets/delete/:id             controllers.DatasetController.delete(id: Int)
+GET     /datasets/show/:id               controllers.DatasetController.show(id: Int)
+GET     /datasets/show/:id/page/:numb    controllers.DatasetController.show_page(id: Int, numb: Int)
+POST    /datasets/show/                  controllers.DatasetController.show_page_from_form
+
+POST    /integrate                       controllers.DatasetController.integrate
 
 #Integrations
-GET     /api/integrations               controllers.IntegrationController.index
-GET     /api/integration/:id            controllers.IntegrationController.read(id: String)
-POST    /api/integration                controllers.IntegrationController.upload
-PUT     /api/integration                controllers.IntegrationController.update(id: String)
-DELETE  /api/integration/:id            controllers.IntegrationController.delete(id: String)
+GET     /integrations                     controllers.IntegrationController.index
+GET     /integrations/show/:id            controllers.IntegrationController.show(id: Int)
+GET     /integrations/show/:id/page/:numb controllers.IntegrationController.show_page(id: Int, numb: Int)
+POST    /integrations/show/               controllers.IntegrationController.show_page_from_form
 
-# An example controller showing how to use dependency injection
-GET     /count                      controllers.CountController.count
+POST    /integrations                    controllers.IntegrationController.upload
+PUT     /integration                     controllers.IntegrationController.update(id: Int)
+GET     /integration/delete/:id          controllers.IntegrationController.delete(id: Int)
 
-# An example controller showing how to write asynchronous code
-GET     /message                    controllers.AsyncController.message
+GET     /integrations/:id/topk/l/:rowId  controllers.IntegrationController.topKL(id: Int, rowId: Int, k: Int?= 5)
+GET     /integrations/:id/topk/r/:rowId  controllers.IntegrationController.topKR(id: Int, rowId: Int, k: Int?= 5)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

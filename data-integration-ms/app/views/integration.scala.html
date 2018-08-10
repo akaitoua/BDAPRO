@@ -1,5 +1,6 @@
-@(dsId: Int, dsName: String, headers: Array[String], rows: Array[Array[String]], selected: Int, numberOfPages: Int)
-@main(s"Dataset: $dsName")(s"ID: $dsId") {
+@(intId: Int, intName: String , headers: Array[String], rows: Array[Array[String]], selected: Int, numberOfPages: Int)
+@main(s"Integration: $intName")(s"ID: $intId") {
+
     <table class="table table-striped">
         <thead>
             <tr>
@@ -12,9 +13,21 @@
 
         @for(row <- rows) {
             <tr>
-            @for(data <- row) {
-                <td>@data</td>
-            }
+                @defining(row(0)) { similarityId =>
+                    <td>@similarityId</td>
+                }
+                @defining(row(1)) { dsOneRowId =>
+                    <td><a href="@routes.IntegrationController.topKL(intId, dsOneRowId.toInt)">@dsOneRowId</a></td>
+                }
+
+                @defining(row(2)) { dsTwoRowId =>
+                    <td><a href="@routes.IntegrationController.topKR(intId, dsTwoRowId.toInt)">@dsTwoRowId</a></td>
+                }
+
+                @defining(row(3)) { similarity =>
+                    <td>@similarity</td>
+                }
+
             </tr>
         }
         </tbody>
@@ -30,14 +43,14 @@
                     </li>
                 } else {
                     <li class="page-item">
-                        <a class="page-link" href="@routes.DatasetController.show_page(dsId, selected - 1)" tabindex="-1">
+                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected - 1)" tabindex="-1">
                             Previous</a>
                     </li>
                 }
 
-                <form method="post" class="form-horizontal" action="@routes.DatasetController.show_page_from_form()" enctype="multipart/form-data">
+                <form method="post" class="form-horizontal" action="@routes.IntegrationController.show_page_from_form()" enctype="multipart/form-data">
                     <div class="form-group input-group">
-                        <input type="hidden" name="pageId" value="@dsId" />
+                        <input type="hidden" name="pageId" value="@intId" />
                         <input required type="number" size="10" name="pageNumb" placeholder=" @selected of @numberOfPages ">
                         <span class="input-group-btn"><button class="btn btn-primary rounded-0">Go!</button></span>
                     </div>
@@ -51,7 +64,7 @@
 
                 } else {
                     <li class="page-item">
-                        <a class="page-link" href="@routes.DatasetController.show_page(dsId, selected + 1)">Next</a>
+                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected + 1)">Next</a>
                     </li>
                 }
 

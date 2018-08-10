@@ -1,0 +1,77 @@
+@(name: String, dsOne: Dataset, dsTwo: Dataset)
+@main("Integrations")(s"$name:Integrating $dsOne with $dsTwo") {
+
+    <form method="post" action="@routes.IntegrationController.upload()" enctype="multipart/form-data">
+        <input type="hidden" name="integration_name" value="@name">
+            <!-- Integration Algorithm Properties -->
+        <div class="form-row">
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Blocking Algorithm:</label>
+                    </div>
+                    <select class="custom-select" name="blockingAlg" id="inputGroupSelect01" required>
+                        <option disabled selected value="">-- Select a Algorithm --</option>
+                        <option value="soundex">Sound Base</option>
+                        <option value="sortedneighborhood">Sorted Neighbour</option>
+                        <option value="permutations">Permutation Base</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Comparison Algorithm:</label>
+                    </div>
+                    <select class="custom-select" name="comparisonAlg" id="inputGroupSelect01">
+                        <option disabled selected value="">-- Select a Algorithm --</option>
+                        <option value="Jaccard">Jaccard</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <label class="input-group-text" for="inputGroupSelect01">Threshold:</label>
+                    </div>
+                    <input type="number" name="threshold" min="0" max="1" step="0.01" id="threshold" value ="0.5" required/>
+                </div>
+            </div>
+        </div>
+            <!-- Datasets Field Selection -->
+        <div class="form-row">
+            <div class="col">
+                <h3><span class="badge badge-light">Dataset #1: @dsOne.displayName() </span></h3>
+                <input type="hidden" name="dsOneId" value="@dsOne.id">
+                <input type="hidden" name="dsOneName" value="@dsOne.name">
+                @for(field <- dsOne.fields) {
+                    <input type="checkbox" name="dsOneField" checked="checked" value="@field">
+                    @field <br>
+                    }
+
+            </div>
+
+            <div class="col">
+                <h3><span class="badge badge-light">Dataset #2: @dsTwo.displayName() </span></h3>
+                <input type="hidden" name="dsTwoId" value="@dsTwo.id">
+                <input type="hidden" name="dsTwoName" value="@dsTwo.name">
+                @for(field <- dsTwo.fields) {
+                    <input type="checkbox" name="dsTwoField" checked="checked" value="@field">
+                    @field <br>
+                    }
+            </div>
+        </div>
+
+            <!-- Buttons -->
+        <div class="form-row m-3">
+            <div class="col">
+                <a href="@routes.IntegrationController.index()">
+                    <button type="button" class="btn btn-secondary">Cancel</button>
+                </a>
+                <button type="submit" class="btn btn-primary">Integrate</button>
+            </div>
+        </div>
+    </form>
+
+}

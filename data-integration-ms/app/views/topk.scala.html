@@ -1,0 +1,24 @@
+@(intId: Int, intName: String , headers: Array[String], rows: Array[Array[String]])
+@main(s"Integration: $intName")(s"ID: $intId") {
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+            @for(header <- headers) {
+                <th scope="col">@header</th>
+            }
+            </tr>
+        </thead>
+        <tbody>
+
+        @for(row <- rows) {
+            <tr>
+            @for(data <- row) {
+                <td>@data</td>
+            }
+            </tr>
+        }
+        </tbody>
+    </table>
+
+}
