@@ -194,6 +194,8 @@ class DatasetDBController @Inject()(db: Database) {
 
   def getDataset(id: Int): Dataset = {
 
+    println(s"Getting Dataset #$id")
+
     val conn = db.getConnection()
     val stmt = conn.createStatement
 
@@ -265,6 +267,27 @@ class DatasetDBController @Inject()(db: Database) {
 
 
     return rows
+  }
+
+  def getDatasetRow(id: Int, rowId: Int) : Array[String] = {
+    val name = getDatasetName(id)
+    val fields = "COLUMN_ID" +: getDatasetFields(name)
+    val query = s"SELECT * FROM $name WHERE COLUMN_ID = $rowId; "
+    var row = ""
+    println(query)
+
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      val res = stmt.executeQuery(query);
+      while (res.next()){
+        for (field <- fields){
+          println(res.getString(field))
+          row += res.getString(field) + "\t"
+        }
+      }
+    }
+    println(row.split("\t").length)
+    row.split("\t")
   }
 
 

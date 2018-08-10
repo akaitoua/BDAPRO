@@ -2,10 +2,11 @@ package controllers
 
 import java.io.File
 
+import breeze.numerics.constants.Database
 import javax.inject.Inject
 import models.{Dataset, Integration}
 import org.h2.jdbc.JdbcSQLException
-import play.api.Logger
+import play.api.{Logger, db}
 import play.api.db.Database
 
 import scala.io.Source
@@ -34,16 +35,17 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
         val id = rs.getInt("INTEGRATION_ID")
         val name = rs.getString("INTEGRATION_NAME")
         val dsOneId = rs.getInt("DS_ONE_ID")
-        val dsTwoId = rs.getInt("DS_ONE_ID")
+        val dsTwoId = rs.getInt("DS_TWO_ID")
         val block = rs.getString("BLOCKING_ALG")
         val comp = rs.getString("COMPARISON_ALG")
         val same = rs.getBoolean("SAME_DS_COMP")
         val threshold = rs.getFloat("THRESHOLD")
+        val ready = rs.getBoolean("READY")
 
         val dsOne = dsDBController.getDataset(dsOneId)
         val dsTwo = dsDBController.getDataset(dsTwoId)
 
-        integrations = integrations :+ Integration(id, name, dsOne, dsTwo, block, comp, same, threshold)
+        integrations = integrations :+ Integration(id, name, dsOne, dsTwo, block, comp, same, threshold, ready)
 
       }
 
@@ -62,16 +64,17 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
         val id = rs.getInt("INTEGRATION_ID")
         val name = rs.getString("INTEGRATION_NAME")
         val dsOneId = rs.getInt("DS_ONE_ID")
-        val dsTwoId = rs.getInt("DS_ONE_ID")
+        val dsTwoId = rs.getInt("DS_TWO_ID")
         val block = rs.getString("BLOCKING_ALG")
         val comp = rs.getString("COMPARISON_ALG")
         val same = rs.getBoolean("SAME_DS_COMP")
         val threshold = rs.getFloat("THRESHOLD")
+        val ready = rs.getBoolean("READY")
 
         val dsOne = dsDBController.getDataset(dsOneId)
         val dsTwo = dsDBController.getDataset(dsTwoId)
 
-        return Integration(id, name, dsOne, dsTwo, block, comp, same, threshold)
+        return Integration(id, name, dsOne, dsTwo, block, comp, same, threshold, ready)
       }
     }
     null
@@ -205,6 +208,54 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
       stmt.execute(query);
     }
 
+  }
+
+  def getTopK (id: Int, rowId: Int, fromDSOne: Boolean = true, topK: Int = 5) : Array[Array[String]] = {
+
+    val integration = get(id)
+    val fields = integration.datasetOne.fields
+    val dsOneName = integration.datasetOne.name
+    val dsTwoName = integration.datasetTwo.name
+
+    var rows = Array[Array[String]]()
+    val fieldsStr = fields.mkString(",")
+    val query = s"SELECT COLUMN_ID, $fieldsStr, SIMILARITY FROM SIMILARITY " +
+      s"JOIN ${if (fromDSOne) dsOneName else dsTwoName} ON COLUMN_ID = ${if (fromDSOne) "ROW_DS_TWO_ID" else "ROW_DS_ONE_ID"} " +
+      s"WHERE INTEGRATION_ID = $id AND ${if (fromDSOne) "ROW_DS_ONE_ID" else "ROW_DS_TWO_ID"} = $rowId " +
+      s"ORDER BY SIMILARITY DESC LIMIT $topK;"
+
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      val res = stmt.executeQuery(query);
+      while(res.next()) {
+        var row = ""
+        for (field <- "COLUMN_ID" +: fields :+ "SIMILARITY") {
+          row += res.getString(field) + "\t"
+        }
+        rows = rows :+ row.split("\t")
+      }
+    }
+
+    return rows
+  }
+
+  def setIntegrationReady(id: Int, ready: Boolean) = {
+    val query = s"UPDATE INTEGRATION SET READY = '$ready' WHERE INTEGRATION_ID = $id;"
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      stmt.execute(query);
+    }
+  }
+
+  def isIntegrationReady(id: Int) : Boolean = {
+    val query = s"SELECT READY FROM INTEGRATION WHERE INTEGRATION_ID = $id; "
+
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      val res = stmt.executeQuery(query);
+      if(res.next()) res.getBoolean("READY")
+      else false
+    }
   }
 
 

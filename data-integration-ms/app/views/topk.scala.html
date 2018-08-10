@@ -1,15 +1,21 @@
-@(intId: Int, intName: String , headers: Array[String], rows: Array[Array[String]])
+@(intId: Int, intName: String , headers: Array[String], mainRow: Array[String],rows: Array[Array[String]])
 @main(s"Integration: $intName")(s"ID: $intId") {
-
+    <div class="table-responsive">
     <table class="table table-striped">
         <thead>
-            <tr>
+            <tr class="text-secondary">
             @for(header <- headers) {
                 <th scope="col">@header</th>
             }
             </tr>
         </thead>
         <tbody>
+            <tr class="text-light bg-primary">
+            @for(data <- mainRow) {
+                <td>@data</td>
+            }
+                <td>-</td>
+            </tr>
 
         @for(row <- rows) {
             <tr>
@@ -20,5 +26,6 @@
         }
         </tbody>
     </table>
+    </div>
 
 }

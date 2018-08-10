@@ -102,6 +102,7 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
         intDB.addSimilarity(integrationId, file)
       })
 
+      intDB.setIntegrationReady(integrationId, true)
     }
 
     Redirect(routes.IntegrationController.index())
@@ -116,17 +117,19 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
   }
 
   def topKL (id: Int, rowId: Int, k: Int) = Action {
-    val headers = Array("SIMILARITY_ID","ROW_DS_ONE_ID", "ROW_DS_TWO_ID", "SIMILARITY")
-    val idRow = s"ROW_DS_ONE_ID = $rowId "
-    val content = intDB.getTopK(id, idRow, k)
-    Ok(views.html.topk(id, "Demo",headers, content))
+    val integration = intDB.get(id)
+    val headers = "COLUMN_ID" +: integration.datasetOne.fields :+ "SIMILARITY"
+    val mainRow = dsDB.getDatasetRow(integration.datasetTwo.id, rowId)
+    val content = intDB.getTopK(id, rowId, fromDSOne = true,topK = k)
+    Ok(views.html.topk(id, integration.name, headers, mainRow,content))
   }
 
   def topKR (id: Int, rowId: Int, k: Int) = Action {
-    val headers = Array("SIMILARITY_ID","ROW_DS_ONE_ID", "ROW_DS_TWO_ID", "SIMILARITY")
-    val idRow = s"ROW_DS_TWO_ID = $rowId "
-    val content = intDB.getTopK(id, idRow, k)
-    Ok(views.html.topk(id, "Demo",headers, content))
+    val integration = intDB.get(id)
+    val headers = "COLUMN_ID" +: integration.datasetOne.fields :+ "SIMILARITY"
+    val mainRow = dsDB.getDatasetRow(integration.datasetOne.id, rowId)
+    val content = intDB.getTopK(id, rowId, fromDSOne = false,topK = k)
+    Ok(views.html.topk(id, integration.name, headers, mainRow, content))
   }
 
 }
