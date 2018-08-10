@@ -19,41 +19,41 @@ public class LookupGenerator {
     public static void main(String[] args) throws Exception {
 
         String rootPath = "/mnt/work/code-base/IntegrationMicroService/";
-        String output= "/home/venkat/Desktop/symspell.txt";
+        String output = "/home/venkat/Desktop/symspell.txt";
         String input2 = rootPath + "company_entities.csv";
         String input1 = rootPath + "company_profiles.csv";
 
         // build permutations hash for the smaller dataset
         Multimap<String, String> perms = buildHash(input1);
 
-        Formatter fs= new Formatter(output);
+        Formatter fs = new Formatter(output);
 
         // TODO: read line by line from the second dataset
         String line;
         BufferedReader br = new BufferedReader(new FileReader(new File(input2)));
         while ((line = br.readLine()) != null) {
-            getProbableMatches(line,perms);
+            getProbableMatches(line, perms);
         }
         System.out.println("DONE");
     }
 
-    public static Multimap<String,String> buildHash(String input) {
+    public static Multimap<String, String> buildHash(String input) {
         Multimap<String, String> perms = ArrayListMultimap.create();
         String line;
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(new File(input)));
             while ((line = br.readLine()) != null) {
-                addMapToMultimap(buildPermutations(line,true), perms);
+                addMapToMultimap(buildPermutations(line, true), perms);
             }
-        }catch(Exception ex)    {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         return perms;
     }
 
 
-    public static ArrayList<String> getProbableMatches(String line,Multimap<String, String> perms){
+    public static ArrayList<String> getProbableMatches(String line, Multimap<String, String> perms) {
 
         ArrayList<String> possibleDups = new ArrayList<>();
 //       Formatter fs= new Formatter(output);
@@ -62,11 +62,17 @@ public class LookupGenerator {
         String[] lineWords = line.split("\\t");
         String rowId = lineWords[0];
         // parse name column and split the column into words and then generate permuations per word
-        String[] words = lineWords[1].toLowerCase().split("\\s+");
+        String[] words = lineWords[2].toLowerCase().split("\\s+");
         for (String word : words) {
-            Set<String> permsdup = buildPermutations(word, false).keySet();
+            Map<String, String> permsdup = buildPermutations(word, false);
+            Set<String> permsKeyset = null;
+            if (permsdup != null) {
+                permsKeyset = permsdup.keySet();
+            } else {
+                continue;
+            }
 
-            for (String s : permsdup) {
+            for (String s : permsKeyset) {
                 if (perms.get(s).size() >= 1) {
                     duplicatePerWord.putAll(word, perms.get(s));
                     // System.out.println("word:"+ word + "  perm: "+ s +"  listIds: "+perms.get(s));
@@ -99,25 +105,27 @@ public class LookupGenerator {
 
     // TODO: build Permutation map for all the data
     // TODO: Add multival map, example sun,sin
-    private static Map<String, String> buildPermutations(String in,boolean lineNumberPresent) {
+    private static Map<String, String> buildPermutations(String in, boolean lineNumberPresent) {
         // "Porzellaneum Studentenheimverein der Wiener Universität";
         int edit = 2;
-        String rowId="0";
-        in=in.toLowerCase();
-        if (!(in.length()>=1)){
-            return  null;
+        String rowId = "0";
+        in = in.toLowerCase();
+        if (!(in.length() >= 1)) {
+            return null;
         }
         String[] splitName;
         Map<String, String> inp = new HashMap();
         if (lineNumberPresent) {
             String[] inputSplit = in.split("\\t+");
             rowId = inputSplit[0];
-            splitName = inputSplit[1].split("\\s+");
+            splitName = inputSplit[2].split("\\s+");
             inputSplit = null;
-        }else {
+        } else {
             splitName = in.split("\\s+");
         }
-        for (String s : splitName){ inp.put(s, rowId);}
+        for (String s : splitName) {
+            inp.put(s, rowId);
+        }
 
 
         Map<String, String> permutations = new HashMap<>();
@@ -144,7 +152,7 @@ public class LookupGenerator {
 
         while (st.hasNext()) {
             String val = st.next();
-            if (val.length() > 3 ) {
+            if (val.length() > 3) {
                 for (int i = 0; i < val.length(); i++) {
                     sb.append(val).deleteCharAt(i);
                     String perm = sb.toString();
@@ -158,8 +166,8 @@ public class LookupGenerator {
         return ret;
     }
 
-    private static void addMapToMultimap(Map<String,String> map,Multimap<String, String> mp){
-        if (map==null){
+    private static void addMapToMultimap(Map<String, String> map, Multimap<String, String> mp) {
+        if (map == null) {
             return;
         }
         for (String key : map.keySet()) {

@@ -1,24 +1,25 @@
 package services.spark.partitioners
 
+
 import services.spark.inputreader.{CSVReader, Tuple}
 import org.apache.commons.text.similarity.JaccardDistance
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.mllib.rdd.RDDFunctions._
+import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions.{col, concat_ws, lit}
-import services.spark.inputreader.{CSVReader, Tuple}
+import services.spark.utilities.Utilities
 
-class SortedNeighbor (windowSize:Int = 4) extends Serializable {
+class SortedNeighbor(windowSize: Int = 4) extends Serializable {
 
-  def buildBlockingKey(row:Tuple):String={
+  def buildBlockingKey(row: Tuple): String = {
     row.fields(1) // TODO: do dynamic blocking key
   }
 
 
-  def getBlockedRDD(rows:RDD[Tuple]):RDD[(Tuple,Tuple)]= {
-    val blockingKey:RDD[(String,Tuple)] = rows.map(row => {
-      (buildBlockingKey(row),row)
+  def getBlockedRDD(rows: RDD[Tuple]): RDD[(Tuple, Tuple)] = {
+    val blockingKey: RDD[(String, Tuple)] = rows.map(row => {
+      (buildBlockingKey(row), row)
     })
     val sortBlockKey = blockingKey.sortByKey().map(_._2)
     cartesianWindow(sortBlockKey.sliding(windowSize).map(_.toSeq))
@@ -26,18 +27,17 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
 
   /**
     * creates cartesian pairs of rows
-    * */
-  def cartesianWindow(rdd:RDD[Seq[Tuple]]):RDD[(Tuple,Tuple)]={
-    rdd.flatMap(block=> {
-      val maxIndex = block.length-1
-      for (first <- 0 to maxIndex; second<-first+1 to maxIndex) yield (block(first),block(second))
+    **/
+  def cartesianWindow(rdd: RDD[Seq[Tuple]]): RDD[(Tuple, Tuple)] = {
+    rdd.flatMap(block => {
+      val maxIndex = block.length - 1
+      for (first <- 0 to maxIndex; second <- first + 1 to maxIndex) yield (block(first), block(second))
     })
   }
 
 
-
-  def matchEntities(input1:String,input2:String,output:String,idcols:Array[String],threshold:Double)={
-    val idCols=concat_ws("",idcols.map(x=> col(x)):_*)
+  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double) = {
+    val idCols = concat_ws("", idcols.map(x => col(x)): _*)
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
     conf.setMaster("local")
@@ -50,17 +50,17 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
     val ds1 = dfA.withColumn("datasetid", lit(1))
     val ds2 = dfB.withColumn("datasetid", lit(2))
 
-    def rowConvert(x:Row,len:Int):Tuple = {
-      var y:Array[String] = new Array[String](len)
-      for (i <- 0 to len-1){
-        y(i)=String.valueOf(x.get(i))
+    def rowConvert(x: Row, len: Int): Tuple = {
+      var y: Array[String] = new Array[String](len)
+      for (i <- 0 to len - 1) {
+        y(i) = String.valueOf(x.get(i))
       }
       Tuple(y)
     }
 
     val sn = new SortedNeighbor(4)
 
-    val combined=ds1.union(ds2).sort(idCols).rdd.map(row=> rowConvert(row,row.length))
+    val combined = ds1.union(ds2).sort(idCols).rdd.map(row => rowConvert(row, row.length))
     val sortedNBlocked = sn.getBlockedRDD(combined)
 
 
@@ -70,14 +70,14 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
     //
     //  System.exit(0)
 
-    case class EntityMatch(id1:String,id2:String,name1:String,name2:String,similarity:Double)
+    case class EntityMatch(id1: String, id2: String, name1: String, name2: String, similarity: Double)
 
-    def produceSimilarity(row1:Array[String],row2:Array[String]):Option[EntityMatch]={
-      lazy val jd = new JaccardDistance()
-      var sim=0.0;
-      val dataColsLen= row1.length-1-1; // specific to Soundex Partitioner; -1 to avoid index out of bounds, -2 as we added dataset id, partition code
+    def produceSimilarity(row1: Array[String], row2: Array[String]): Option[EntityMatch] = {
+      lazy val jd = Utilities.getDistanceMeasure(compAlg)
+      var sim = 0.0;
+      val dataColsLen = row1.length - 1 - 1; // specific to Soundex Partitioner; -1 to avoid index out of bounds, -2 as we added dataset id, partition code
 
-      if (row1(dataColsLen+1)!=row2(dataColsLen+1)) {
+      if (row1(dataColsLen + 1) != row2(dataColsLen + 1)) {
         var simNormal = dataColsLen
 
         def decSim(): Unit = {
@@ -91,12 +91,14 @@ class SortedNeighbor (windowSize:Int = 4) extends Serializable {
           })
         }
         Some(EntityMatch(row1(0), row2(0), row1(1), row2(1), sim / simNormal)) // remove
-      }else{
+      } else {
         None
       }
     }
 
-    val  simCalculated= sortedNBlocked.map(x=>produceSimilarity(x._2.fields,x._1.fields)).filter(x=>{ x != None}).map(x=>(Array(x.get.id1,x.get.id2,x.get.similarity.toString).mkString(",")))
+    val simCalculated = sortedNBlocked.map(x => produceSimilarity(x._2.fields, x._1.fields)).filter(x => {
+      x != None
+    }).map(x => (Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(",")))
 
     simCalculated.saveAsTextFile(output)
     spark.stop()
