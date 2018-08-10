@@ -22,7 +22,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       (buildBlockingKey(row), row)
     })
     val sortBlockKey = blockingKey.sortByKey().map(_._2)
-    cartesianWindow(sortBlockKey.sliding(windowSize).map(_.toSeq))
+    cartesianWindow(sortBlockKey.sliding(windowSize,windowSize).map(_.toSeq))
   }
 
   /**
@@ -97,8 +97,8 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
     }
 
     val simCalculated = sortedNBlocked.map(x => produceSimilarity(x._2.fields, x._1.fields)).filter(x => {
-      x != None
-    }).map(x => (Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(",")))
+      x.isDefined
+    }).map(x => Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(","))
 
     simCalculated.saveAsTextFile(output)
     spark.stop()

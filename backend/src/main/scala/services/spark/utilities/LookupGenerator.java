@@ -18,23 +18,34 @@ public class LookupGenerator {
 
     public static void main(String[] args) throws Exception {
 
-        String rootPath = "/mnt/work/code-base/IntegrationMicroService/";
-        String output = "/home/venkat/Desktop/symspell.txt";
-        String input2 = rootPath + "company_entities.csv";
-        String input1 = rootPath + "company_profiles.csv";
+        String rootPath = "/home/venkat/Downloads/";
+//        String rootPath ="/mnt/work/code-base/IntegrationMicroService/";
+        String input1 = rootPath + "company_entities.tsv";
+        String input2 = rootPath + "test.csv";
+//        String output = "/mnt/work/DI/output";
 
         // build permutations hash for the smaller dataset
-        Multimap<String, String> perms = buildHash(input1);
+        Multimap<String, String> perms = buildHash(input2);
+        System.out.println(perms.size());
+//        Formatter fs = new Formatter(output);
 
-        Formatter fs = new Formatter(output);
+        String line="578\t36462\tA&B ONE Kommunikationsagentur GmbH\t\thttp://www.a-b-one.de\t1993\tFrankfurt am " +
+                "Main\tDE\n";
+        ArrayList<String> matches =getProbableMatches(line, perms);
+
+        for(String s: matches){
+            System.out.println(s);
+        }
+
+        System.out.println("DONE");
 
         // TODO: read line by line from the second dataset
-        String line;
-        BufferedReader br = new BufferedReader(new FileReader(new File(input2)));
-        while ((line = br.readLine()) != null) {
-            getProbableMatches(line, perms);
-        }
-        System.out.println("DONE");
+//        String line;
+//        BufferedReader br = new BufferedReader(new FileReader(new File(input2)));
+//        while ((line = br.readLine()) != null) {
+//            getProbableMatches(line, perms);
+//        }
+//        System.out.println("DONE");
     }
 
     public static Multimap<String, String> buildHash(String input) {
@@ -160,6 +171,8 @@ public class LookupGenerator {
                     sb.setLength(0);
                     byteCount += perm.length();
                 }
+            }else{
+                ret.put(val,rowId);
             }
         }
 

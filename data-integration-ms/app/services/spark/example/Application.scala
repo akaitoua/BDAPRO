@@ -7,9 +7,9 @@ object Application extends App {
 
   override def main(args: Array[String]): Unit = {
     val output = "/mnt/work/DI/output"
-    //    val rootPath = "/mnt/work/code-base/IntegrationMicroService/"
+//        val rootPath = "/mnt/work/code-base/IntegrationMicroService/"
     val rootPath = "/home/venkat/Downloads/"
-    val input1 = rootPath + "company_entities.tsv"
+    val input1 = rootPath + "company_entities.csv"
     val input2 = rootPath + "test.csv"
     val identityCol = Array("company_name", "country")
 
