@@ -25,7 +25,6 @@ GET     /integrations/show/:id/page/:numb controllers.IntegrationController.show
 POST    /integrations/show/               controllers.IntegrationController.show_page_from_form
 
 POST    /integrations                    controllers.IntegrationController.upload
-PUT     /integration                     controllers.IntegrationController.update(id: Int)
 GET     /integration/delete/:id          controllers.IntegrationController.delete(id: Int)
 
 GET     /integrations/:id/topk/l/:rowId  controllers.IntegrationController.topKL(id: Int, rowId: Int, k: Int?= 5)

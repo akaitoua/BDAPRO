@@ -15,18 +15,19 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
   def index = Action {
     Logger.info("Calling integrations index ...")
     val names = dsDB.show()
-    val integrations = intDB.show
+    val integrations = intDB.getIntegrations
     println(integrations)
     Ok(views.html.integrations(names, integrations))
   }
 
   def show_page(id: Int, pageNumb: Int) = Action {
     val headers = Array("SIMILARITY_ID","ROW_DS_ONE_ID", "ROW_DS_TWO_ID", "SIMILARITY")
-    val threshold = intDB.getThreshold(id);
+    val threshold = intDB.getIntegrationThreshold(id);
     val content = intDB.getIntegrationContent(id, threshold,(pageNumb - 1) *10)
-    val length = intDB.getLength(id)
+    val length = intDB.getInterationLength(id)
     val pages = if (length % 10 == 0) (length / 10) else ((length / 10) + 1)
-    Ok(views.html.integration(id, "Demo",headers, content, pageNumb,pages))
+    val integration = intDB.getIntegration(id)
+    Ok(views.html.integration(integration,headers, content, pageNumb,pages))
   }
 
   def show(id: Int) = Action {
@@ -37,27 +38,6 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
     val pageId = request.body.asFormUrlEncoded("pageId").map({ dsOneId => dsOneId.toString.trim }).head
     val pageNumb = request.body.asFormUrlEncoded("pageNumb").map({ dsOneId => dsOneId.toString.trim }).head
     Redirect(routes.IntegrationController.show_page(pageId.toInt, pageNumb.toInt))
-  }
-
-  def update(id: Int) = Action {
-    Ok(views.html.todo())
-  }
-
-  def config = Action(parse.multipartFormData) { request =>
-    Logger.info("Calling integrations upload ...")
-    val dsOneId = request.body.asFormUrlEncoded("dsOneId").map({ dsOneId => dsOneId.toString.trim }).head
-    val dsOneName = dsDB.getDatasetName(dsOneId.toInt)
-    val dsOneFields = dsDB.getDatasetFields(dsOneName).filter(field => field != "DATASET_ID")
-    val dsOne: Dataset = Dataset(dsOneId.toInt, dsOneName)
-    dsOneFields.map(field => dsOne.addField(field))
-
-    val dsTwoId = request.body.asFormUrlEncoded("dsTwoId").map({ dsTwoId => dsTwoId.toString.trim }).head
-    val dsTwoName = dsDB.getDatasetName(dsTwoId.toInt)
-    val dsTwoFields = dsDB.getDatasetFields(dsTwoName).filter(field => field != "DATASET_ID")
-    val dsTwo: Dataset = Dataset(dsTwoId.toInt, dsTwoName)
-    dsTwoFields.map(field => dsTwo.addField(field))
-
-    Ok(views.html.integrate("Some name",dsOne, dsTwo))
   }
 
   def upload = Action(parse.multipartFormData) { request =>
@@ -77,31 +57,37 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
     val datasetTwo = Dataset(dsTwoId, dsTwoName)
     request.body.asFormUrlEncoded("dsTwoField").map({ field => datasetTwo.addField(field) })
 
-    val integration = Integration(-1, name,datasetOne, datasetTwo, blockingAlg, comparisonAlg, false, threshold)
-    intDB.add(integration)
+    val integration = Integration(-1, name,datasetOne, datasetTwo, blockingAlg, comparisonAlg, threshold)
+    intDB.addIntegration(integration)
 
     val currentDirectory = new java.io.File(".").getCanonicalPath
 
     val output = s"$currentDirectory/integrations/$name"
     val identityCol = datasetOne.fields
 
-    val integrationId = intDB.getIdByName(name)
+    val integrationId = intDB.getIntegrationId(name)
 
 
     scala.concurrent.Future{
-      intDB.generateDatasetFile(datasetOne.name.toLowerCase, datasetOne.fields)
-      intDB.generateDatasetFile(datasetTwo.name.toLowerCase, datasetTwo.fields)
+      print("Generating data!...")
+      dsDB.generateDatasetFile(datasetOne.name.toLowerCase, datasetOne.fields)
+      dsDB.generateDatasetFile(datasetTwo.name.toLowerCase, datasetTwo.fields)
+      print("Generating data... Done!")
 
       val dsOne = s"$currentDirectory/data/$dsOneName.tsv"
       println(dsOne)
       val dsTwo = s"$currentDirectory/data/$dsTwoName.tsv"
       println(dsTwo)
 
+      print("Matching! ...")
       EntityMatch.findDuplicates(dsOne,dsTwo,output,identityCol,blockingAlg,comparisonAlg,threshold)
+      print("Matching... Done!")
+
+      print("Adding results to the DB ...")
       FilesController.getListOfSparkFiles(name).foreach( file => {
         intDB.addSimilarity(integrationId, file)
       })
-
+      print("Adding results to the DB ... Done!")
       intDB.setIntegrationReady(integrationId, true)
     }
 
@@ -109,7 +95,7 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
   }
 
   def delete(id: Int) = Action {
-    val integration : Integration = intDB.get(id)
+    val integration : Integration = intDB.getIntegration(id)
     val name = integration.name
     FilesController.deleteIntegration(name)
     intDB.delete(id)
@@ -117,18 +103,18 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
   }
 
   def topKL (id: Int, rowId: Int, k: Int) = Action {
-    val integration = intDB.get(id)
+    val integration = intDB.getIntegration(id)
     val headers = "COLUMN_ID" +: integration.datasetOne.fields :+ "SIMILARITY"
     val mainRow = dsDB.getDatasetRow(integration.datasetTwo.id, rowId)
-    val content = intDB.getTopK(id, rowId, fromDSOne = true,topK = k)
+    val content = intDB.getIntegrationTopK(id, rowId, fromDSOne = true,topK = k)
     Ok(views.html.topk(id, integration.name, headers, mainRow,content))
   }
 
   def topKR (id: Int, rowId: Int, k: Int) = Action {
-    val integration = intDB.get(id)
+    val integration = intDB.getIntegration(id)
     val headers = "COLUMN_ID" +: integration.datasetOne.fields :+ "SIMILARITY"
     val mainRow = dsDB.getDatasetRow(integration.datasetOne.id, rowId)
-    val content = intDB.getTopK(id, rowId, fromDSOne = false,topK = k)
+    val content = intDB.getIntegrationTopK(id, rowId, fromDSOne = false,topK = k)
     Ok(views.html.topk(id, integration.name, headers, mainRow, content))
   }
 

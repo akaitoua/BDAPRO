@@ -1,5 +1,30 @@
-@(intId: Int, intName: String , headers: Array[String], rows: Array[Array[String]], selected: Int, numberOfPages: Int)
-@main(s"Integration: $intName")(s"ID: $intId") {
+@(integration: Integration, headers: Array[String], rows: Array[Array[String]], selected: Int, numberOfPages: Int)
+@main(s"Integration: ${integration.name}")(s"ID: ${integration.id}") {
+
+
+    <table class="table table-sm table-borderless">
+        <tbody>
+            <tr>
+                <th scope="row">Name:</th>
+                <td>@integration.name</td>
+                <th scope="row">Threshold:</th>
+                <td>@integration.threshold</td>
+            </tr>
+            <tr>
+                <th scope="row">Dataset #1:</th>
+                <td>@integration.datasetOne.displayName()</td>
+                <th scope="row">Dataset #2:</th>
+                <td>@integration.datasetTwo.displayName()</td>
+            </tr>
+
+            <tr>
+                <th scope="row">Blocking:</th>
+                <td>@integration.blocking</td>
+                <th scope="row">Comparison:</th>
+                <td>@integration.comparison</td>
+            </tr>
+        </tbody>
+    </table>
 
     <table class="table table-striped">
         <thead>
@@ -17,11 +42,11 @@
                     <td>@similarityId</td>
                 }
                 @defining(row(1)) { dsOneRowId =>
-                    <td><a href="@routes.IntegrationController.topKL(intId, dsOneRowId.toInt)">@dsOneRowId</a></td>
+                    <td><a href="@routes.IntegrationController.topKL(integration.id, dsOneRowId.toInt)">@dsOneRowId</a></td>
                 }
 
                 @defining(row(2)) { dsTwoRowId =>
-                    <td><a href="@routes.IntegrationController.topKR(intId, dsTwoRowId.toInt)">@dsTwoRowId</a></td>
+                    <td><a href="@routes.IntegrationController.topKR(integration.id, dsTwoRowId.toInt)">@dsTwoRowId</a></td>
                 }
 
                 @defining(row(3)) { similarity =>
@@ -43,14 +68,14 @@
                     </li>
                 } else {
                     <li class="page-item">
-                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected - 1)" tabindex="-1">
+                        <a class="page-link" href="@routes.IntegrationController.show_page(integration.id, selected - 1)" tabindex="-1">
                             Previous</a>
                     </li>
                 }
 
                 <form method="post" class="form-horizontal" action="@routes.IntegrationController.show_page_from_form()" enctype="multipart/form-data">
                     <div class="form-group input-group">
-                        <input type="hidden" name="pageId" value="@intId" />
+                        <input type="hidden" name="pageId" value="@integration.id" />
                         <input required type="number" size="10" name="pageNumb" placeholder=" @selected of @numberOfPages ">
                         <span class="input-group-btn"><button class="btn btn-primary rounded-0">Go!</button></span>
                     </div>
@@ -64,7 +89,7 @@
 
                 } else {
                     <li class="page-item">
-                        <a class="page-link" href="@routes.IntegrationController.show_page(intId, selected + 1)">Next</a>
+                        <a class="page-link" href="@routes.IntegrationController.show_page(integration.id, selected + 1)">Next</a>
                     </li>
                 }
 

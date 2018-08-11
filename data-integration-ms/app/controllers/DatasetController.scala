@@ -106,16 +106,21 @@ class DatasetController @Inject()(cc: ControllerComponents, db: DatasetDBControl
 
     request.body.file("dataset").map { dataset =>
 
-      val fileName = dataset.filename.toLowerCase
-      Logger.info(s"Uploading file: $fileName")
+      scala.concurrent.Future{
 
-      dataset.ref.moveTo(Paths.get(s"/$currentDirectory/datasets/$name.csv"), replace = true)
-      Logger.info(s"File $name.csv added!")
+        val fileName = dataset.filename.toLowerCase
+        Logger.info(s"Uploading file: $fileName")
 
-      Logger.info("Uploading dataset to H2 ...")
-      val ds = fc.createDataset(new File(s"/$currentDirectory/datasets/$name.csv"))
-      db.add(ds)
-      Logger.info("Dataset uploaded to H2")
+        dataset.ref.moveTo(Paths.get(s"/$currentDirectory/datasets/$name.csv"), replace = true)
+        Logger.info(s"File $name.csv added!")
+
+        Logger.info("Uploading dataset to H2 ...")
+        val ds = fc.createDataset(new File(s"/$currentDirectory/datasets/$name.csv"))
+        db.add(ds)
+        Logger.info("Dataset uploaded to H2")
+
+      }
+
       Redirect(routes.DatasetController.index)
     }.getOrElse {
       Logger.error(s"File not found im form")
