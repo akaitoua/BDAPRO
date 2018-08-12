@@ -2,12 +2,11 @@ package services.spark.partitioners
 
 
 import services.spark.inputreader.{CSVReader, Tuple}
-import org.apache.commons.text.similarity.JaccardDistance
-import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.rdd.RDDFunctions._
 import org.apache.spark.sql.{Row, SparkSession}
 import org.apache.spark.sql.functions.{col, concat_ws, lit}
+import services.spark.entity_matchers.EntityMatch
 import services.spark.utilities.Utilities
 
 class SortedNeighbor(windowSize: Int = 4) extends Serializable {
@@ -22,7 +21,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       (buildBlockingKey(row), row)
     })
     val sortBlockKey = blockingKey.sortByKey().map(_._2)
-    cartesianWindow(sortBlockKey.sliding(windowSize,windowSize).map(_.toSeq)).filter(x=>x._1.fields(x._1.len()-1)!="2" && x._1.fields(x._1.len()-1)!=x._2.fields(x._2.len()-1))//x=>(x(0).fields(x(0).len()-1)!="2" && x(0).fields(x(0).len()-1)!=x(1).fields(x(1).len()-1)))
+    cartesianWindow(sortBlockKey.sliding(windowSize, windowSize).map(_.toSeq)).filter(x => x._1.fields(x._1.len() - 1) != "2" && x._1.fields(x._1.len() - 1) != x._2.fields(x._2.len() - 1)) //x=>(x(0).fields(x(0).len()-1)!="2" && x(0).fields(x(0).len()-1)!=x(1).fields(x(1).len()-1)))
   }
 
   /**
@@ -36,15 +35,9 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
   }
 
 
-  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double) = {
-    val idc=idcols:+"datasetid"
+  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double, spark: SparkSession) = {
+    val idc = idcols :+ "datasetid"
     val idCols = concat_ws("", idc.map(x => col(x)): _*)
-    val conf = new SparkConf()
-    conf.set("spark.sql.caseSensitive", "false")
-    conf.setMaster("local")
-    val spark = SparkSession.builder().appName("Data Integration Microservices").config(conf).getOrCreate()
-    import spark.implicits._
-
     val csvReader = new CSVReader(spark);
     val dfA = csvReader.readData(input1, "\t")
     val dfB = csvReader.readData(input2, "\t")
@@ -64,17 +57,14 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
     val combined = ds1.union(ds2).sort(idCols).rdd.map(row => rowConvert(row, row.length))
     val sortedNBlocked = sn.getBlockedRDD(combined)
 
-//    sortedNBlocked.take(100).foreach(x=>println(x._1.toString+" second --> "+x._2.toString))
-    //  sortedNBlocked.take(15).foreach(x=>println(x._1.toString+" second --> "+x._2.toString))
-    //
-    //  spark.stop()
-    //
-    //  System.exit(0)
-
-    case class EntityMatch(id1: String, id2: String, name1: String, name2: String, similarity: Double)
-
     def produceSimilarity(row1: Array[String], row2: Array[String]): Option[EntityMatch] = {
-      lazy val jd = Utilities.getDistanceMeasure(compAlg)
+      val dm = Utilities.getDistanceMeasure(compAlg)
+      val ed = Utilities.tryEditDistanceMeasure(compAlg)
+      if (!dm.isDefined && !ed.isDefined) {
+        println("Unidentified edit distance")
+        System.exit(0)
+      }
+
       var sim = 0.0;
       val dataColsLen = row1.length - 1 - 1; // specific to Soundex Partitioner; -1 to avoid index out of bounds, -2 as we added dataset id, partition code
 
@@ -86,12 +76,12 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
         }
 
         for (i <- 1 to dataColsLen) {
-          sim += (if (row1(i) != "null" && row2(i) != "null") 1 - jd.apply(row1(i), row2(i)) else {
+          sim += (if (row1(i) != "null" && row2(i) != "null") Utilities.getDistance(row1(i), row2(i), dm, ed) else {
             decSim();
             0;
           })
         }
-        Some(EntityMatch(row1(0), row2(0), row1(1), row2(1), sim / simNormal)) // remove
+        Some(EntityMatch(row1(0), row2(0), if (ed.isDefined) sim else sim / simNormal)) // remove
       } else {
         None
       }
@@ -101,8 +91,6 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       x.isDefined
     }).map(x => Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(","))
 
-//    simCalculated.take(20).foreach(println)
     simCalculated.saveAsTextFile(output)
-    spark.stop()
   }
 }

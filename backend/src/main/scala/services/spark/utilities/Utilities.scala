@@ -34,13 +34,41 @@ object Utilities {
       throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
   }
 
-  def getDistanceMeasure(alg: String): SimilarityScore[java.lang.Double] = {
+  def getDistanceMeasure(alg: String): Option[SimilarityScore[java.lang.Double]] = {
     if (alg.equalsIgnoreCase("jaro-winkler")) {
-      new JaroWinklerDistance()
+
+      //      println("Returning Jaro distance measure")
+      Some(new JaroWinklerDistance())
     }
+    //    else if (alg.equalsIgnoreCase("levenshtein")) {
+    //      new LevenshteinDistance
+    //    }
+    else if (alg.equalsIgnoreCase("jaccard")) {
+      //      println("Returning Jaccard distance measure")
+      Some(new JaccardDistance());
+    } else {
+      None
+    }
+  }
+
+  def tryEditDistanceMeasure(alg: String): Option[SimilarityScore[java.lang.Integer]] = {
     if (alg.equalsIgnoreCase("levenshtein")) {
-      new LevenshteinDistance()
+      //      println("Return Levenshtein distance")
+      Some(new LevenshteinDistance)
+    } else {
+      None
     }
-    new JaccardDistance;
+  }
+
+
+  def getDistance(a: String, b: String, dm: Option[SimilarityScore[java.lang.Double]], ed: Option[SimilarityScore[java.lang.Integer]]): Double = {
+    if (ed.isDefined) {
+      math.abs(ed.get.apply(a, b)).toDouble
+    } else if (dm.isDefined) {
+      1 - dm.get.apply(a, b)
+    } else {
+      println("Similarity measure missing")
+      0
+    }
   }
 }

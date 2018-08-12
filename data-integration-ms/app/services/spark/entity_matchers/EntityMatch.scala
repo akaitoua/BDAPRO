@@ -23,10 +23,10 @@ object EntityMatch {
     val spark = SparkSession.builder().appName("Data Integration Microservices").config(conf).getOrCreate()
     if (partioner.equalsIgnoreCase("soundex")){
       val soundPartitioner= new SoundBased
-      soundPartitioner.matchEntities(input1,input2,output,idcol,comparisoner,threshold)
+      soundPartitioner.matchEntities(input1,input2,output,idcol,comparisoner,threshold,spark)
     }else if (partioner.equalsIgnoreCase("sortedneighborhood")){
       val sortPartitioner= new SortedNeighbor()
-      sortPartitioner.matchEntities(input1,input2,output,idcol,comparisoner,threshold)
+      sortPartitioner.matchEntities(input1,input2,output,idcol,comparisoner,threshold,spark)
     }else if(partioner.equalsIgnoreCase("permutations")){
       val deletePerms = new DeletePermutations
       deletePerms.matchEntities(input1,input2,output,idcol,threshold,comparisoner,spark)
