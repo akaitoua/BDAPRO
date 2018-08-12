@@ -1,7 +1,14 @@
 import com.google.inject.AbstractModule
 import java.time.Clock
 
-import services.{ApplicationTimer, AtomicCounter, Counter}
+import services.{InitDatabase}
+import controllers.{DatasetDBController, FilesController, IntegrationDBController}
+import javax.inject.Inject
+import org.h2.jdbc.JdbcSQLException
+import play.api.Logger
+import play.api.db.Databases
+import play.api.db._
+import play.api.db.evolutions.Evolutions
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -16,13 +23,8 @@ import services.{ApplicationTimer, AtomicCounter, Counter}
 class Module extends AbstractModule {
 
   override def configure() = {
-    // Use the system clock as the default implementation of Clock
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone)
-    // Ask Guice to create an instance of ApplicationTimer when the
-    // application starts.
-    bind(classOf[ApplicationTimer]).asEagerSingleton()
-    // Set AtomicCounter as the implementation for Counter.
-    bind(classOf[Counter]).to(classOf[AtomicCounter])
+    // Initialize the DB
+    bind(classOf[InitDatabase]).asEagerSingleton()
   }
 
 }
