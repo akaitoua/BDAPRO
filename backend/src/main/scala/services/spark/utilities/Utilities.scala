@@ -66,7 +66,11 @@ object Utilities {
       val maxLen =  math.max(a.length,b.length);
       1-(math.abs(ed.get.apply(a, b)).toDouble / (if (maxLen==0) 1 else maxLen))
     } else if (dm.isDefined) {
-      1 - dm.get.apply(a, b)
+      if (dm.get.isInstanceOf[JaroWinklerDistance]){
+        dm.get.apply(a, b) // library is returning similarity instead of distance
+      }else {
+        1 - dm.get.apply(a, b)
+      }
     } else {
       println("Similarity measure missing")
       0

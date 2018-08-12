@@ -18,7 +18,7 @@ object EntityMatch {
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
     conf.setMaster("local")
-
+    println("Spark: executing partitioner '%s' and comparisoner '%s' ",partioner,comparisoner)
     val header = Source.fromFile(input1)
     val spark = SparkSession.builder().appName("Data Integration Microservices").config(conf).getOrCreate()
     if (partioner.equalsIgnoreCase("soundex")){
@@ -33,6 +33,7 @@ object EntityMatch {
     } else {
       printf("Given %s partitioner not support at the moment\n",partioner)
     }
+    println("Spark: finished execution")
     spark.close();
   }
 }
