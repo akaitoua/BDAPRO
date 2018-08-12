@@ -36,11 +36,16 @@ object Utilities {
 
   def getDistanceMeasure(alg: String): SimilarityScore[java.lang.Double] = {
     if (alg.equalsIgnoreCase("jaro-winkler")) {
-      new JaroWinklerDistance()
+      return new JaroWinklerDistance()
     }
     if (alg.equalsIgnoreCase("levenshtein")) {
-      new LevenshteinDistance()
+      //return new LevenshteinDistance()
     }
-    new JaccardDistance;
+    if (alg.equalsIgnoreCase("jaccard")) {
+      return new JaccardDistance;
+    }
+
+    return null
+
   }
 }
