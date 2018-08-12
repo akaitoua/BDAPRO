@@ -22,7 +22,9 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-mllib" % "2.2.0",
   "com.databricks" % "spark-csv_2.11" % "1.5.0",
   "org.apache.commons" % "commons-text" % "1.4",
-  "com.google.guava" % "guava" % "23.0"
+  "com.google.guava" % "guava" % "23.0",
+  "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "2.7.2",
+  "org.apache.hadoop" % "hadoop-common" % "2.7.2"
 )
 
 dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.8.7"

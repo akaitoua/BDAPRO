@@ -25,10 +25,12 @@ GET     /integrations/show/:id/page/:numb controllers.IntegrationController.show
 POST    /integrations/show/               controllers.IntegrationController.show_page_from_form
 
 POST    /integrations                    controllers.IntegrationController.upload
-GET     /integration/delete/:id          controllers.IntegrationController.delete(id: Int)
+GET     /integrations/delete/:id          controllers.IntegrationController.delete(id: Int)
 
 GET     /integrations/:id/topk/l/:rowId  controllers.IntegrationController.topKL(id: Int, rowId: Int, k: Int?= 5)
 GET     /integrations/:id/topk/r/:rowId  controllers.IntegrationController.topKR(id: Int, rowId: Int, k: Int?= 5)
+
+GET     /integrations/benchmark/:id      controllers.IntegrationController.benchmark(id: Int)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

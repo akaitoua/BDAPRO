@@ -4,9 +4,11 @@ import java.io.File
 
 import javax.inject._
 import models.{Dataset, Integration}
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.Logger
 import play.api.mvc._
 import services.spark.entity_matchers.EntityMatch
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
@@ -79,9 +81,11 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
       val dsTwo = s"$currentDirectory/data/$dsTwoName.tsv"
       println(dsTwo)
 
-      print("Matching! ...")
+      println("Matching! ...")
+      val start = DateTime.now(DateTimeZone.UTC).getMillis()
       EntityMatch.findDuplicates(dsOne,dsTwo,output,identityCol,blockingAlg,comparisonAlg,threshold)
-      print("Matching... Done!")
+      val end = DateTime.now(DateTimeZone.UTC).getMillis()
+      println(s"Matching... Done! in ${end-start} ms")
 
       print("Adding results to the DB ...")
       FilesController.getListOfSparkFiles(name).foreach( file => {
@@ -116,6 +120,21 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
     val mainRow = dsDB.getDatasetRow(integration.datasetOne.id, rowId)
     val content = intDB.getIntegrationTopK(id, rowId, fromDSOne = false,topK = k)
     Ok(views.html.topk(id, integration.name, headers, mainRow, content))
+  }
+
+  def benchmark(id: Int) = Action {
+    println("Calling benchmark!")
+    scala.concurrent.Future{
+      val thresholds = for (i <- 6 to 10) yield i.toFloat / 10
+      thresholds.foreach(t => {
+        val benchmark = intDB.benchmark(id, t)
+        println(s"$t -> $benchmark")
+      })
+
+      val comparisons = intDB.getInterationLength(id)
+      println(s"Comparisons -> $comparisons")
+    }
+    Redirect(routes.IntegrationController.show(id))
   }
 
 }
