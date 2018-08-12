@@ -44,8 +44,10 @@ class DeletePermutations extends Serializable {
     val file2 = new File(input2)
     var hashfile = input2
     var iterateFile = input1
-    if (file1.length() <= input2.length()) {
+    var fileOrderChange= false;
+    if (file1.length() <= file2.length()) {
       hashfile = input1; iterateFile = input2
+      fileOrderChange=true;
     };
 
     val hashtable = LookupGenerator.buildHash(hashfile);
@@ -64,7 +66,7 @@ class DeletePermutations extends Serializable {
       (slc(0), x)
     })
 
-    val joined = dfB.join(flattedDups)
+    val joined = if (!fileOrderChange) dfB.join(flattedDups) else flattedDups.join(dfB)
 
     val actualDups = joined.mapValues(x => {
       val ds1 = x._1.split("\\t"); val ds2 = x._2.split("\\t"); produceSimilarity(ds1, ds2, compAlg, threshold)
