@@ -69,11 +69,15 @@
             <div class="list-group-item list-group-item-action flex-column align-items-start">
                 <div class="d-flex justify-content-between">
                     <a href="@routes.IntegrationController.show(integration.id)">
-                        <div class="w-70">
-                            <h5 class="mb-1 w-50">@integration.name</h5>
+                        <div class="w-200">
+                            <h5 class="mb-1 w-100">@integration.name</h5>
                             <small class="text-muted">id: @integration.id</small><br>
-                            <small class="text-muted">Algorithms: @integration.blocking / @integration.comparison</small><br>
-                            <small class="text-muted">Threshold: @integration.threshold</small>
+                            @if(integration.ready) {
+                                <span class="badge badge-success">Ready!</span>
+                            } else {
+                                <span class="badge badge-light">Processing...</span>
+                            }
+
                         </div>
                     </a>
                     <div>
@@ -84,7 +88,6 @@
                     </div>
                 </div>
             </div>
-
 
         }
         </div>
