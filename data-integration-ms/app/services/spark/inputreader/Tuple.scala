@@ -10,6 +10,8 @@ class Tuple(field: Array[String]) extends Serializable {
     }
     sb.toString()
   }
+
+  def len():Int=fields.length;
 }
 
 object Tuple {

@@ -13,7 +13,7 @@ import services.spark.utilities.Utilities
 class SortedNeighbor(windowSize: Int = 4) extends Serializable {
 
   def buildBlockingKey(row: Tuple): String = {
-    row.fields(1) // TODO: do dynamic blocking key
+    row.fields(2) // TODO: do dynamic blocking key
   }
 
 
@@ -22,7 +22,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       (buildBlockingKey(row), row)
     })
     val sortBlockKey = blockingKey.sortByKey().map(_._2)
-    cartesianWindow(sortBlockKey.sliding(windowSize,windowSize).map(_.toSeq))
+    cartesianWindow(sortBlockKey.sliding(windowSize,windowSize).map(_.toSeq)).filter(x=>x._1.fields(x._1.len()-1)!="2" && x._1.fields(x._1.len()-1)!=x._2.fields(x._2.len()-1))//x=>(x(0).fields(x(0).len()-1)!="2" && x(0).fields(x(0).len()-1)!=x(1).fields(x(1).len()-1)))
   }
 
   /**
@@ -37,7 +37,8 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
 
 
   def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double) = {
-    val idCols = concat_ws("", idcols.map(x => col(x)): _*)
+    val idc=idcols:+"datasetid"
+    val idCols = concat_ws("", idc.map(x => col(x)): _*)
     val conf = new SparkConf()
     conf.set("spark.sql.caseSensitive", "false")
     conf.setMaster("local")
@@ -52,7 +53,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
 
     def rowConvert(x: Row, len: Int): Tuple = {
       var y: Array[String] = new Array[String](len)
-      for (i <- 0 to len - 1) {
+      for (i <- 0 until len) {
         y(i) = String.valueOf(x.get(i))
       }
       Tuple(y)
@@ -63,7 +64,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
     val combined = ds1.union(ds2).sort(idCols).rdd.map(row => rowConvert(row, row.length))
     val sortedNBlocked = sn.getBlockedRDD(combined)
 
-
+//    sortedNBlocked.take(100).foreach(x=>println(x._1.toString+" second --> "+x._2.toString))
     //  sortedNBlocked.take(15).foreach(x=>println(x._1.toString+" second --> "+x._2.toString))
     //
     //  spark.stop()
@@ -100,6 +101,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       x.isDefined
     }).map(x => Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(","))
 
+//    simCalculated.take(20).foreach(println)
     simCalculated.saveAsTextFile(output)
     spark.stop()
   }

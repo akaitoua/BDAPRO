@@ -234,4 +234,22 @@ class IntegrationDBController @Inject()(db: Database, dsDBController: DatasetDBC
 
   }
 
+  def benchmark(integrationId: Int, threshold: Float): Int = {
+
+
+    val query = s"SELECT COUNT(*) FROM " +
+      s"(SELECT ROW_DS_ONE_ID, MAX(SIMILARITY) " +
+      s"FROM SIMILARITY WHERE INTEGRATION_ID = $integrationId " +
+      s"GROUP BY ROW_DS_ONE_ID " +
+      s"HAVING MAX(SIMILARITY) >= $threshold);"
+
+    db.withConnection { conn =>
+      val stmt = conn.createStatement()
+      val res = stmt.executeQuery(query);
+      if(res.next()) res.getInt("COUNT(*)")
+      else -1
+    }
+
+  }
+
 }

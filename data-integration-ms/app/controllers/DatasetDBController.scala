@@ -194,8 +194,6 @@ class DatasetDBController @Inject()(db: Database) {
 
   def getDataset(id: Int): Dataset = {
 
-    println(s"Getting Dataset #$id")
-
     val conn = db.getConnection()
     val stmt = conn.createStatement
 
