@@ -63,7 +63,8 @@ object Utilities {
 
   def getDistance(a: String, b: String, dm: Option[SimilarityScore[java.lang.Double]], ed: Option[SimilarityScore[java.lang.Integer]]): Double = {
     if (ed.isDefined) {
-      math.abs(ed.get.apply(a, b)).toDouble
+      val maxLen =  math.max(a.length,b.length);
+      1-(math.abs(ed.get.apply(a, b)).toDouble / (if (maxLen==0) 1 else maxLen))
     } else if (dm.isDefined) {
       1 - dm.get.apply(a, b)
     } else {

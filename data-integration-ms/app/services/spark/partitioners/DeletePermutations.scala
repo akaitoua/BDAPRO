@@ -39,7 +39,7 @@ class DeletePermutations extends Serializable {
           0
         })
       }
-      Some(EntityMatch(row1(0), row2(0), if (ed.isDefined) sim else sim / simNormal))
+      Some(EntityMatch(row1(0), row2(0), sim / simNormal))
     }
   }
 

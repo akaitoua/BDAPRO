@@ -81,7 +81,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
             0;
           })
         }
-        Some(EntityMatch(row1(0), row2(0), if (ed.isDefined) sim else sim / simNormal)) // remove
+        Some(EntityMatch(row1(0), row2(0), sim / simNormal))
       } else {
         None
       }

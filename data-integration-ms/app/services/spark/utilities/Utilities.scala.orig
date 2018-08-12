@@ -34,42 +34,27 @@ object Utilities {
       throw new Exception(s"Unable to delete ${file.getAbsolutePath}")
   }
 
-  def getDistanceMeasure(alg: String): Option[SimilarityScore[java.lang.Double]] = {
+  def getDistanceMeasure(alg: String): SimilarityScore[java.lang.Double] = {
     if (alg.equalsIgnoreCase("jaro-winkler")) {
-
-      //      println("Returning Jaro distance measure")
-      Some(new JaroWinklerDistance())
+<<<<<<< HEAD
+      new JaroWinklerDistance()
     }
-    //    else if (alg.equalsIgnoreCase("levenshtein")) {
-    //      new LevenshteinDistance
-    //    }
-    else if (alg.equalsIgnoreCase("jaccard")) {
-      //      println("Returning Jaccard distance measure")
-      Some(new JaccardDistance());
-    } else {
-      None
-    }
-  }
-
-  def tryEditDistanceMeasure(alg: String): Option[SimilarityScore[java.lang.Integer]] = {
     if (alg.equalsIgnoreCase("levenshtein")) {
-      //      println("Return Levenshtein distance")
-      Some(new LevenshteinDistance)
-    } else {
-      None
+      new LevenshteinDistance()
     }
-  }
-
-
-  def getDistance(a: String, b: String, dm: Option[SimilarityScore[java.lang.Double]], ed: Option[SimilarityScore[java.lang.Integer]]): Double = {
-    if (ed.isDefined) {
-      val maxLen =  math.max(a.length,b.length);
-      1-(math.abs(ed.get.apply(a, b)).toDouble / (if (maxLen==0) 1 else maxLen))
-    } else if (dm.isDefined) {
-      1 - dm.get.apply(a, b)
-    } else {
-      println("Similarity measure missing")
-      0
+    new JaccardDistance;
+=======
+      return new JaroWinklerDistance()
     }
+    if (alg.equalsIgnoreCase("levenshtein")) {
+      //return new LevenshteinDistance()
+    }
+    if (alg.equalsIgnoreCase("jaccard")) {
+      return new JaccardDistance;
+    }
+
+    return null
+
+>>>>>>> play/dev
   }
 }

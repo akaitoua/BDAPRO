@@ -43,7 +43,7 @@ class SoundBased extends Serializable {
         0;
       })
     }
-    EntityMatch(row1(0), row2(0), if (ed.isDefined) sim else sim / simNormal)
+    EntityMatch(row1(0), row2(0), sim / simNormal)
   }
 
   val generateJoinSoundCode = udf((x: String) => {
