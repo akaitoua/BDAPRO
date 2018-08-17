@@ -43,7 +43,7 @@ object EntityMatch {
       System.exit(1)
     }
     if(benchmark){
-      Benchmark.benchmark(simCalculated,input1,input2,windowSize,partioner,comparisoner)
+      Benchmark.benchmark(simCalculated,input1,input2,windowSize,partioner,comparisoner,output)
     }else{
       simCalculated.saveAsTextFile(output)
     }

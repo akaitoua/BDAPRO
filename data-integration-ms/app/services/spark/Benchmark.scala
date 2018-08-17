@@ -6,7 +6,7 @@ import org.apache.spark.rdd.RDD
 
 object Benchmark {
 
-  def benchmark(simCalculated:RDD[String],input1:String,input2:String,windowSize:Int,comp:String,sim:String): Unit ={
+  def benchmark(simCalculated:RDD[String],input1:String,input2:String,windowSize:Int,comp:String,sim:String,outPath:String): Unit ={
       println("doing benchmark")
 
       val groupMatches= simCalculated.map(x=> {
@@ -32,7 +32,7 @@ object Benchmark {
       var sb:StringBuilder=new StringBuilder
       sb.append(input1+","+","+windowSize+","+comp+","+sim)
       sb.append(","+simCalculated.count())
-      val fw=new FileWriter("/home/venkat/Desktop/benchmark.txt",true)
+      val fw=new FileWriter(outPath,true)
 //      groupMatches.foreach(x=>{print(x._1,x._2);sb.append(","+x._1+","+x._2)})
     groupMatches.collect().foreach(x=>sb.append(","+x._1+","+x._2))
     try{
