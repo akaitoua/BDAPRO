@@ -4,13 +4,14 @@ import services.spark.entity_matchers.EntityMatch
 import org.apache.commons.codec.language._
 import org.apache.commons.text.similarity.SimilarityScore
 import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions.{col, concat_ws, lit, udf}
 import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 import services.spark.utilities.Utilities
 
 class SoundBased extends Serializable {
 
-  @transient lazy val metaphone = new Metaphone()
+ @transient lazy val metaphone = new Metaphone()
 
   def getSoundCode(col: String): String = if (col != "null") metaphone.encode(col) else col
 
@@ -51,9 +52,10 @@ class SoundBased extends Serializable {
   })
 
 
-  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double, spark: SparkSession): Unit = {
+  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double, spark: SparkSession): RDD[String] = {
     val keyGenCols = concat_ws("", idcols.map(x => col(x)): _*)
-
+//    val keyGenCols = col(idcols(2))
+    // TODO: Get idcols for blocking from UI
     import spark.implicits._
     var utilities: Utilities = new Utilities();
     // Partitioner
@@ -69,7 +71,8 @@ class SoundBased extends Serializable {
     val joined = keyedA.join(keyedB)
 
     val simCalculated = joined.mapValues(x => partitioner.produceSimilarity(x._2, x._1, compAlg, threshold)).map(x => (Array(x._2.id1, x._2.id2, x._2.similarity.toString).mkString(",")));
-
-    simCalculated.saveAsTextFile(output)
+    simCalculated
+    //    simCalculated.saveAsTextFile(output)
+//    .benchmark(simCalculated)
   }
 }

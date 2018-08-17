@@ -18,24 +18,43 @@ public class LookupGenerator {
 
     public static void main(String[] args) throws Exception {
 
-        String rootPath = "/home/venkat/Downloads/";
-//        String rootPath ="/mnt/work/code-base/IntegrationMicroService/";
-        String input1 = rootPath + "company_entities.tsv";
-        String input2 = rootPath + "test.csv";
-//        String output = "/mnt/work/DI/output";
+        String line="1\t36462\tVenkata Subbarao";
 
-        // build permutations hash for the smaller dataset
-        Multimap<String, String> perms = buildHash(input2);
-        System.out.println(perms.size());
-//        Formatter fs = new Formatter(output);
+        Set<String> keys= buildPermutations(line,true).keySet();
 
-        String line="578\t36462\tA&B ONE Kommunikationsagentur GmbH\t\thttp://www.a-b-one.de\t1993\tFrankfurt am " +
-                "Main\tDE\n";
-        ArrayList<String> matches =getProbableMatches(line, perms);
+        Iterator<String> perms=keys.iterator();
+        System.out.println(keys.size());
 
-        for(String s: matches){
-            System.out.println(s);
+        while(perms.hasNext()){
+            System.out.println(perms.next());
         }
+
+ //       String line="578\t36462\tA&B ONE Kommunikationsagentur GmbH\t\thttp://www.a-b-one.de\t1993\tFrankfurt am " +
+//                "Main\tDE\n";
+//        ArrayList<String> matches =getProbableMatches(line, perms);
+//
+//        for(String s: matches){
+//            System.out.println(s);
+//        }
+
+//        String rootPath = "/home/venkat/Downloads/";
+////        String rootPath ="/mnt/work/code-base/IntegrationMicroService/";
+//        String input1 = rootPath + "company_entities.tsv";
+//        String input2 = rootPath + "test.csv";
+////        String output = "/mnt/work/DI/output";
+//
+//        // build permutations hash for the smaller dataset
+//        Multimap<String, String> perms = buildHash(input2);
+//        System.out.println(perms.size());
+////        Formatter fs = new Formatter(output);
+//
+//        String line="578\t36462\tA&B ONE Kommunikationsagentur GmbH\t\thttp://www.a-b-one.de\t1993\tFrankfurt am " +
+//                "Main\tDE\n";
+//        ArrayList<String> matches =getProbableMatches(line, perms);
+//
+//        for(String s: matches){
+//            System.out.println(s);
+//        }
 
         System.out.println("DONE");
 
@@ -114,11 +133,10 @@ public class LookupGenerator {
         return possibleDups;
     }
 
-    // TODO: build Permutation map for all the data
     // TODO: Add multival map, example sun,sin
-    private static Map<String, String> buildPermutations(String in, boolean lineNumberPresent) {
+    public static Map<String, String> buildPermutations(String in, boolean lineNumberPresent) {
         // "Porzellaneum Studentenheimverein der Wiener Universität";
-        int edit = 2;
+        int edit = 1;
         String rowId = "0";
         in = in.toLowerCase();
         if (!(in.length() >= 1)) {
@@ -179,7 +197,7 @@ public class LookupGenerator {
         return ret;
     }
 
-    private static void addMapToMultimap(Map<String, String> map, Multimap<String, String> mp) {
+    public static void addMapToMultimap(Map<String, String> map, Multimap<String, String> mp) {
         if (map == null) {
             return;
         }

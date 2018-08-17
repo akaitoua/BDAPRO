@@ -83,7 +83,7 @@ class IntegrationController @Inject()(dsDB: DatasetDBController, intDB: Integrat
 
       println("Matching! ...")
       val start = DateTime.now(DateTimeZone.UTC).getMillis()
-      EntityMatch.findDuplicates(dsOne,dsTwo,output,identityCol,blockingAlg,comparisonAlg,threshold)
+      EntityMatch.findDuplicates(dsOne,dsTwo,output,identityCol,blockingAlg,comparisonAlg,threshold,4)
       val end = DateTime.now(DateTimeZone.UTC).getMillis()
       println(s"Matching... Done! in ${end-start} ms")
 

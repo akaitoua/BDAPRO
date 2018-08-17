@@ -44,7 +44,7 @@ class DeletePermutations extends Serializable {
   }
 
 
-  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], threshold: Double, compAlg: String, spark: SparkSession) = {
+  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], threshold: Double, compAlg: String, spark: SparkSession):RDD[String] = {
     val file1 = new File(input1)
     val file2 = new File(input2)
     var hashfile = input2
@@ -78,6 +78,6 @@ class DeletePermutations extends Serializable {
       val ds2 = x._2.split("\\t");
       produceSimilarity(ds1, ds2, compAlg, threshold)
     })
-    actualDups.filter(x => x._2.isDefined).map(x => Array(x._2.get.id1, x._2.get.id2, x._2.get.similarity).mkString(",")).saveAsTextFile(output)
+    actualDups.filter(x => x._2.isDefined).map(x => Array(x._2.get.id1, x._2.get.id2, x._2.get.similarity).mkString(","))
   }
 }

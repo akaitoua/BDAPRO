@@ -15,8 +15,8 @@ object Application extends App {
 
     // currently only supports
     // partioners - soundex, sortedneighborhood, permutations
-    // distances Jacccard, Jaro-winkler, Levenshtein
+    // distances Jaccard, Jaro-winkler, Levenshtein
     // all name ares NOT case sensitive
-    EntityMatch.findDuplicates(input1, input2, output, identityCol, "permutations", "levenshtein", 0.5)
+    EntityMatch.findDuplicates(input1, input2, output, identityCol, "permutations", "levenshtein", 0.5,0)
   }
 }

@@ -35,7 +35,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
   }
 
 
-  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double, spark: SparkSession) = {
+  def matchEntities(input1: String, input2: String, output: String, idcols: Array[String], compAlg: String, threshold: Double, spark: SparkSession,windowSize:Int):RDD[String] = {
     val idc = idcols :+ "datasetid"
     val idCols = concat_ws("", idc.map(x => col(x)): _*)
     val csvReader = new CSVReader(spark);
@@ -52,7 +52,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       Tuple(y)
     }
 
-    val sn = new SortedNeighbor(4)
+    val sn = new SortedNeighbor(windowSize)
 
     val combined = ds1.union(ds2).sort(idCols).rdd.map(row => rowConvert(row, row.length))
     val sortedNBlocked = sn.getBlockedRDD(combined)
@@ -91,6 +91,7 @@ class SortedNeighbor(windowSize: Int = 4) extends Serializable {
       x.isDefined
     }).map(x => Array(x.get.id1, x.get.id2, x.get.similarity.toString).mkString(","))
 
-    simCalculated.saveAsTextFile(output)
+    simCalculated
+//    simCalculated.saveAsTextFile(output)
   }
 }
